@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+	<head>
+		<title>{{ title }}</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+	</head>
+
+	<body>
+	{#this is a comment#}
+	<div class="myclass">
+		<h1>Hello world!</h1>
+		<h2>The date and time on the server is: {{ time }}</h2>
+	</div>
+		
+	<div class="button">
+		<button type="button">Click!</button>
+	</div>
+	<div class="form">
+		{#this is a form and the text is sent to the python file#}
+		<form action="." method="POST">
+			<input type="text" name="text"><br>
+			<input type="radio" name="rdbOnOff" value="on">On
+			<input type="radio" name="rdbOnOff" value="off" checked>Off<br>
+
+			<input type="radio" name="rdbI2c" value="yes" checked>i2c yes
+			<input type="radio" name="rdbI2c" value="no">i2c no<br>
+
+			<input type="radio" name="rdbIO" value="Input">Input
+			<input type="radio" name="rdbIO" value="Output" checked>Output<br>
+
+			<input type="radio" name="rdbDA" value="Digital">Digital
+			<input type="radio" name="rdbDA" value="Aanalog" checked>Analog<br>
+
+			<input type="text" name="txtPin"><br>
+
+			<input type="submit" name="my-form" value="Send">
+		</form>
+	</div>
+	<div class="chat_text">
+		{% for item in chat%}
+		<p>{{ item }}</p>
+		{% endfor %}
+	</div>
+	</body>
+</html>

@@ -83,13 +83,20 @@ def my_form_post():
                                 templateData['chat'].append("enviado-> "+str(txtPin) + ": "+ str(text))
                         else:
                                 templateData['chat'].append("please try again")
-                except:
-                        templateData['chat'].append("ERROR with i2c")
+                except Exception, e:
+                        return str(e)
+                        '''templateData['chat'].append("ERROR with i2c")'''
         
         else:
                 templateData['chat'].append("tu mensaje no se ha enviado porque no has elegido esa opcion")
         '''render'''
         return render_template('main.html', **templateData)
+
+#method for the devices tab
+@app.route('/devices')
+def devicesList():
+        return render_template('devices.html')
+
 
 #run the server
 if __name__ == "__main__":

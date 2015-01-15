@@ -24,7 +24,7 @@ while True:
     writeNumber(var)
     print "RPI: Hi Arduino, I sent you ", var
     # sleep one second
-    time.sleep(1)
+    time.sleep(0.2)
 
     number = readNumber()
     print "Arduino: Hey RPI, I received a digit ", number

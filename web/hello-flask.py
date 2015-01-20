@@ -13,8 +13,9 @@ templateData = {
                 'chat': []
 	}
 
-#i2c bus init 
-bus = smbus.SMBus(1)
+#i2c bus init
+numberBus = 1
+bus = smbus.SMBus(numberBus)
 
 #i2c and gpio address. This is the address we setup in the arduino program
 address = 0x04
@@ -65,24 +66,23 @@ def hello():
 @app.route('/', methods=['POST'])
 def my_form_post():
         '''access the form elements in the dictionary request.form'''
-        text = request.form['text']
-        rdbOnOff = True if request.form['rdbOnOff']=='on' else False
+        #txtText = request.form['txtText']
+        numberBus = request.form['txtText']
         rdbI2c = True if request.form['rdbI2c']=='yes' else False
-        rdbIO = True if request.form['rdbIO']=='Input' else False
-        rdbDA = True if request.form['rdbDA']=='Digital' else False
+        #rdbIO = True if request.form['rdbIO']=='Input' else False
+        #rdbDA = True if request.form['rdbDA']=='Digital' else False
         txtPin = int(request.form['txtPin'])
 
         '''if the chkI2c is checked, then send the data through the bus'''
-        if rdbI2c:                
+        if rdbI2c:
+                rdbOnOff = True if request.form['rdbOnOff']=='on' else False
                 try:
-                        if rdbI2c:
+                        if rdbOnOff:
                                 writeByte(1)
-                                templateData['chat'].append("enviado-> "+str(txtPin) + ": "+ str(text))
-                        elif radio == 'off':
-                                writeByte(0)
-                                templateData['chat'].append("enviado-> "+str(txtPin) + ": "+ str(text))
+                                templateData['chat'].append("enviado-> "+str(txtPin) + ": "+ "on")
                         else:
-                                templateData['chat'].append("please try again")
+                                writeByte(0)
+                                templateData['chat'].append("enviado-> "+str(txtPin) + ": "+ "Off")
                 except Exception, e:
                         return str(e)
                         '''templateData['chat'].append("ERROR with i2c")'''

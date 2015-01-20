@@ -1,0 +1,42 @@
+{% extends 'index.html' %}
+{% block devices %}
+
+<body>
+	
+	<h2>{{ device_name }}</h2>
+	<p>address: {{ specificDeviceData.Address }}</p>
+	<p>DO: {{ specificDeviceData.DO }}</p>
+	<p>AO: {{ specificDeviceData.AO }}</p>
+	<p>DI: {{ specificDeviceData.DI }}</p>
+	<p>AI: {{ specificDeviceData.AI }}</p>
+	
+	
+<!-- start of form -->
+	<div>
+		<form action="{{ url_for('user_command') }}" method="POST" class="form-horizontal">
+			{% for key in specificDeviceData %}
+				<div class="form-group">
+    					<label class="col-sm-2 control-label">{{ key }}</label>
+    					<div class="col-sm-10" style="width: 100px">
+      						<label class="col-sm-2 control-label">{{ specificDeviceData[key] }}</label>
+      					
+    					</div>
+    				{% if key != 'Address' %}
+    					<div class="col-sm-20">
+    						<button type="submit" name="but" class="btn btn-success" value="{{ device_name }} {{ key }} On">On</button>
+    						<button type="submit" name="but" class="btn btn-danger" value="{{ device_name }} {{ key }} Off">Off</button>
+    						
+    					</div>
+    				{% endif %}
+  				</div>
+			{% endfor %}
+		</form>
+	</div>
+<!-- end of form -->
+	
+	
+	
+	
+</body>
+	
+{% endblock %}

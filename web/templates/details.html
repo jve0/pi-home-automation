@@ -4,30 +4,24 @@
 <body>
 	
 	<h2>{{ device_name }}</h2>
-	<p>address: {{ specificDeviceData.Address }}</p>
-	<p>DO: {{ specificDeviceData.DO }}</p>
-	<p>AO: {{ specificDeviceData.AO }}</p>
-	<p>DI: {{ specificDeviceData.DI }}</p>
-	<p>AI: {{ specificDeviceData.AI }}</p>
+	<p>address: {{ device_address }}</p>
 	
 	
 <!-- start of form -->
 	<div>
 		<form action="{{ url_for('user_command') }}" method="POST" class="form-horizontal">
-			{% for key in specificDeviceData %}
+			{% for node in DO %}
 				<div class="form-group">
-    					<label class="col-sm-2 control-label">{{ key }}</label>
+    					<label class="col-sm-2 control-label">{{ node.Name }}</label>
     					<div class="col-sm-10" style="width: 100px">
-      						<label class="col-sm-2 control-label">{{ specificDeviceData[key] }}</label>
+      						<label class="col-sm-2 control-label">{{ node.Pin }}</label>
       					
     					</div>
-    				{% if key != 'Address' %}
     					<div class="col-sm-20">
-    						<button type="submit" name="but" class="btn btn-success" value="{{ device_name }} {{ key }} On">On</button>
-    						<button type="submit" name="but" class="btn btn-danger" value="{{ device_name }} {{ key }} Off">Off</button>
+    						<button type="submit" name="but" class="btn btn-success" value="{{ device_name }} {{ device_address }} {{ node.Pin }} On">On</button>
+    						<button type="submit" name="but" class="btn btn-danger" value="{{ device_address }} {{ node.Pin }} Off">Off</button>
     						
     					</div>
-    				{% endif %}
   				</div>
 			{% endfor %}
 		</form>
@@ -35,7 +29,79 @@
 <!-- end of form -->
 	
 	
-	
+
+<!-- Button that fires up the Modal -->
+	<div>
+		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#new_node_modal">New node</button>
+	</div>
+
+
+
+
+
+
+<!-- Modal -->
+	<div class="modal fade" id="new_node_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  		<div class="modal-dialog">
+    			<div class="modal-content">
+      				<div class="modal-header">
+        				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        				<h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      				</div>
+      				<div class="modal-body">
+      				
+
+
+<!-- Start the form -->
+
+				<form name="new_node_form" class="form-horizontal" method="post" action="{{ url_for('new_node') }}">
+  				  <div class="form-group">
+    				    <label for="inputName" class="col-sm-2 control-label">Name</label>
+    				    <div class="col-sm-10">
+      				      <input type="text" name="inputName" class="form-control" id="inputName" placeholder="Name of the device">
+    				    </div>
+  				  </div>
+  				  <div class="form-group">
+    				    <label for="inputPin" class="col-sm-2 control-label">Pin</label>
+    					<div class="col-sm-10">
+      					  <input type="text" name="inputPin" class="form-control" id="inputPin" placeholder="Target pin">
+    					</div>
+  				   </div>
+  				   
+  				   <div class="form-group">
+  				     <label for="signal" class="col-sm-2 control-label">Type of Signal</label>
+  				     <div class="col-sm-10">
+  				       <select name="signal" class="form-control">
+  				         <option>Digital Output</option>
+  				         <option>Digital Input</option>
+  				         <option>Analog Output</option>
+  				         <option>Analog Input</option>
+  				       </select>
+  				     </div>
+  				   </div>
+  				   
+  				   <div class="form-group">
+  				   
+  			
+  				     				    
+  				   <input type="checkbox" name="deviceAddress" value="{{ device_address }}" checked=True hidden=True>
+  				   <input type="checkbox" name="deviceName" value="{{ device_name }}" checked=True hidden=True>
+  				   
+  				    <div class="form-group">
+    					<div class="col-sm-offset-2 col-sm-10">
+      					  <button type="submit" class="btn btn-success">Add</button>
+        				  <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+    					</div>
+  				     </div>
+				   </form>			
+<!--end of form-->	
+
+
+      				</div>
+    			</div>
+  		</div>
+	</div>
+<!-- end of modal -->
 	
 </body>
 	

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
+from server_db import *
 import datetime
 
 import smbus
@@ -13,20 +14,21 @@ templateData = {
                 'chat': []
 	}
 
-devicesData ={
-        'my_first_node': {
-                 'Address': 0x04,
-                 'DO': 13,
-                 'AO': 3
-                 },
-        'my_second_node': {
-                 'Address': 0x05,
-                 'DO': 13,
-                 }
-        }
-
 #i2c bus init
 bus = smbus.SMBus(1)
+
+#database init
+s = dbInit()
+dbEngine = s[0]
+dbMetadata = s[1]
+dbConnection = s[2]
+
+#init necessary tables in database and take them from it
+dbDevicesTable = dbCreateTables(dbMetadata, dbEngine, 0)
+dbDOTable = dbCreateTables(dbMetadata, dbEngine, 1)
+dbDITable = dbCreateTables(dbMetadata, dbEngine, 2)
+dbAOTable = dbCreateTables(dbMetadata, dbEngine, 3)
+dbAITable = dbCreateTables(dbMetadata, dbEngine, 4)
 
 #i2c and gpio address. This is the address we setup in the arduino program
 i2c_address = 0x04
@@ -35,24 +37,21 @@ i2c_cmd = 0x01
 
 
 #method for writing to the i2c bus
-def writeByte(value):
-        bus.write_byte(address, 13)
-        bus.write_byte(address, value)
-        return -1
-
-#method for reading to the i2c bus
-def readByte():
-        number = bus.read_byte(address)
-        return number
-
-def writeI2c(pin, value):
-        bus.write_i2c_block_data(i2c_address, i2c_cmd, ConvertListToSend(pin,value))
+def writeI2c(address, pin, value):
+        bus.write_i2c_block_data(address, i2c_cmd, ConvertListToSend(pin,value))
 
 def ConvertListToSend(pin, value):
         converted = []
         converted.append(pin)
         converted.append(value)
         return converted
+
+
+#method for reading to the i2c bus
+def readByte():
+        number = bus.read_byte(address)
+        return number
+
 
 #code to execute when entered '/'
 @app.route("/")
@@ -97,46 +96,92 @@ def my_form_post():
 #method for the devices tab
 @app.route('/devices')
 def devicesList():
-        return render_template('devices.html', devicesData=devicesData)
+        #create a dict with all the devices in the i2c_devices table
+        dbConnection = dbInit()[2]
+        values = dbSelectTable(dbDevicesTable, dbConnection)
+        return render_template('devices.html', devicesData=values)
 
 #method for the new devices form
 @app.route('/devices/new_device', methods=['POST'])
 def new_device():
         name = request.form['inputName']
         address = request.form['inputAddress']
+        new_device_args = [{'Name': name, 'Address': address}]
 
         for device in devicesData:
                 if device == name:
                         break
         else:
-                devicesData[name] = { 'Address': address }
+                #create new item in i2c_devices table in database
+                dbInsert(dbDevicesTable, dbConnection, new_device_args)
         return redirect('/devices')
+
+#method for a new node inside a device
+@app.route('/devices/new_node', methods=['POST'])
+def new_node():
+        input_name = request.form['inputName']
+        input_pin = request.form['inputPin']
+        signal = request.form['signal']
+        device_address = request.form['deviceAddress']
+        device_name = request.form['deviceName']
+
+        args=[{'Name': input_name, 'Address': int(device_address), 'Pin': int(input_pin)}]
+
+        if signal == 'Digital Output':
+                dbInsert(dbDOTable, dbConnection, args)
+        elif signal == 'Digital Input':
+                dbInsert(dbDITable, dbConnection, args)
+        elif signal == 'Analog Input':
+                dbInsert(dbAITable, dbConnection, args)
+        elif signal == 'Analog Output':
+                dbInsert(dbAOTable, dbConnection, args)
+        else:
+                return str(0)
+        
+        return redirect(url_for('particular_device_details', device_name=device_name))
+
 
 #method for the details of the devices
 @app.route('/devices/details', methods=['POST'])
 def device_details():
-        specific_device = request.form['submit']
-        return render_template('details.html', device_name=specific_device, specificDeviceData=devicesData[specific_device])
+        device_name = request.form['submit']
+        return redirect(url_for('particular_device_details', device_name=device_name))
+
+#method for the page of each device
+@app.route('/<device_name>')
+def particular_device_details(device_name):
+        dbConnection = dbInit()[2]
+        device_address = dbSelectAddressByName(dbDevicesTable, device_name, dbConnection)
+        DO = dbSelectRowByAddress(dbDOTable, device_address, dbConnection)
+        DI = dbSelectRowByAddress(dbDITable, device_address, dbConnection)
+        AO = dbSelectRowByAddress(dbAOTable, device_address, dbConnection)
+        AI = dbSelectRowByAddress(dbAITable, device_address, dbConnection)
+        return render_template('details.html',
+                               device_name=device_name,
+                               device_address=device_address,
+                               DO=DO, DI=DI, AO=AO, AI=AI)
+
 
 
 #method for handle the user commands related to inputs and outputs
 @app.route('/devices/details/command', methods=['POST'])
 def user_command():
-        command = request.form['but'] #returns a string: "device_name device_name.key On/Off"
+        command = request.form['but'] #returns a string: "device_name device_address node.Pin On/Off"
         coms = command.split()
         device_name = coms[0]
-        device_key = coms[1]
-        instruction = coms[2]
+        device_address = coms[1]
+        pin = coms[2]
+        instruction = coms[3]
 
         try:
                 if instruction == 'On':
-                        writeI2c(devicesData[device_name][device_key], 1)
+                        writeI2c(int(device_address), int(pin), 1)
                 elif instruction == 'Off':
-                        writeI2c(devicesData[device_name][device_key], 0)
+                        writeI2c(int(device_address), int(pin), 0)
         except Exception, e:
                 return str(e)
                 
-        return 'wee'
+        return redirect(url_for('particualr_device_details', device_name=device_name))
 
 
 

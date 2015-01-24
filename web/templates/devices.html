@@ -16,21 +16,12 @@
   				<tr style="font-weight: bold">
   					<td>Name</td>
   					<td>Address</td>
-  					<td>DO</td>
-  					<td>AO</td>
-  					<td>DI</td>
-  					<td>AI</td>
-  					
   				</tr>
   				
 				{% for device in devicesData %}
 				<tr>
-					<td><input type="submit" name="submit" value="{{ device }}" class="btn btn-link"></td>
-					<td>{{ devicesData[device].address }}</td>
-					<td>{{ devicesData[device].DO }}</td>
-					<td>{{ devicesData[device].AO }}</td>
-					<td>{{ devicesData[device].DI }}</td>
-					<td>{{ devicesData[device].AI }}</td>
+					<td><input type="submit" name="submit" value="{{ device.Name }}" class="btn btn-link"></td>
+					<td>{{ device.Address }}</td>
 				</tr>
 				{% endfor %}
   			</table>
@@ -38,23 +29,8 @@
   		</form>
 	</div>
 <!-- end of table of devices -->
-
-	
-	  		
-<!-- script for the click of a row 
-  	<script type="text/javascript")>
-  		$('.table > tr').click(function(){
-  			
-  		});
-  	</script>
- -->
   	
-  	
-  	
-	<div>
-		<button type="button" class="btn" data-toggdata-target="{{ '/main' }}>Bla</button>
-	</div>
-	
+  
 <!-- Button that fires up the Modal -->
 	<div>
 		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#new_item_modal">New item</button>

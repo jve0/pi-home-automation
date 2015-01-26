@@ -10,23 +10,43 @@
 <!-- start of form -->
 	<div>
 		<form action="{{ url_for('user_command') }}" method="POST" class="form-horizontal">
-			{% for node in DO %}
+		  {% for table in tables %}
+			{% for node in tables[table] %}
 				<div class="form-group">
-    					<label class="col-sm-2 control-label">{{ node.Name }}</label>
+    					<label class="col-sm-2 control-label">{{ table }}</label>
     					<div class="col-sm-10" style="width: 100px">
       						<label class="col-sm-2 control-label">{{ node.Pin }}</label>
       					
     					</div>
     					<div class="col-sm-20">
-    						<button type="submit" name="but" class="btn btn-success" value="{{ device_name }} {{ device_address }} {{ node.Pin }} On">On</button>
-    						<button type="submit" name="but" class="btn btn-danger" value="{{ device_address }} {{ node.Pin }} Off">Off</button>
+    						<button type="submit" name="but" class="btn btn-success" value="{{ table }} {{ device_address }} {{ node.Pin }} On">On</button>
+    						<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} Off">Off</button>
+    						
+    						
+    						  <button type="submit" name="but" class="btn btn-default" value="{{ table }} {{ device_address }} {{ node.Pin }} remove">
+    						    <span class="glyphicon glyphicon-remove-circle" aria-hidden="true">X</span>
+    						  </button>
     						
     					</div>
+    					
+    					 <input type="checkbox" name="deviceName" value="{{ device_name }}" checked=True hidden=True>
+    					
   				</div>
 			{% endfor %}
+		  {% endfor %}
 		</form>
 	</div>
 <!-- end of form -->
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 

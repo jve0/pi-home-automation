@@ -56,7 +56,7 @@ def dbSelectRowByAddress(table, address, connection):
     return selection.fetchall()     #return a nx2 array (Address, Pin)
 
 def dbSelectAddressByName(table, name, connection):
-    s = "SELECT Address FROM " + str(table) + " WHERE Name='" + str(name)+ "'"
+    s = "SELECT Address FROM " + str(table) + " WHERE Name='" + name+ "'"
     selection = connection.execute(s).fetchone()
     return selection[0] #return an integer
 
@@ -64,9 +64,9 @@ def dbUpdate(table, connection, args):
     u = table.update()
     u.execute(args)
 
-def dbDelete(table, address, connection):
-    #connection.execute(table.delete().where(table[
-    pass
+def dbDelete(table, address, pin, connection):
+    connection.execute(table.delete().where(and_(table.c.Address == address,
+                                                 table.c.Pin == pin)))
 
 def dbDrop(table, engine, connection):
     connection.close()
@@ -74,20 +74,21 @@ def dbDrop(table, engine, connection):
     conn = engine.connect()
     
 
-##s = dbInit()
-##engine = s[0]
-##metadata = s[1]
-##conn = s[2]
-##
-##table = dbCreateTables(metadata, engine, 4)
+s = dbInit()
+engine = s[0]
+metadata = s[1]
+conn = s[2]
+
+table = dbCreateTables(metadata, engine, 2)
 ##ins = [{'Pin': 10, 'Address':12, 'Name': 'test'}]
 ##dbInsert(table, conn, ins)
-##
-##rs = dbSelectTable(table, conn)
-##
-##for row in rs:
-##    print str(row.Name) + " + " + str(row.Address)
-##
+
+dbDelete(table, 12, 10, conn)
+rs = dbSelectTable(table, conn)
+
+for row in rs:
+    print str(row.Address) + " + " + str(row.Pin)
+
 ##ad = dbSelectRowByAddress(table, 12, conn)
 ##print ad
 

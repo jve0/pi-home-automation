@@ -29,6 +29,11 @@ dbDOTable = dbCreateTables(dbMetadata, dbEngine, 1)
 dbDITable = dbCreateTables(dbMetadata, dbEngine, 2)
 dbAOTable = dbCreateTables(dbMetadata, dbEngine, 3)
 dbAITable = dbCreateTables(dbMetadata, dbEngine, 4)
+dbTablesDict = {'Devices': dbDevicesTable,
+                'DO': dbDOTable,
+                'DI': dbDITable,
+                'AI': dbAITable,
+                'AO': dbAOTable}
 
 #i2c and gpio address. This is the address we setup in the arduino program
 i2c_address = 0x04
@@ -108,8 +113,11 @@ def new_device():
         address = request.form['inputAddress']
         new_device_args = [{'Name': name, 'Address': address}]
 
-        for device in devicesData:
-                if device == name:
+        dbConnection = dbInit()[2]
+        values = dbSelectTable(dbDevicesTable, dbConnection)
+
+        for device in values:
+                if device.Name == name:
                         break
         else:
                 #create new item in i2c_devices table in database
@@ -152,23 +160,26 @@ def device_details():
 def particular_device_details(device_name):
         dbConnection = dbInit()[2]
         device_address = dbSelectAddressByName(dbDevicesTable, device_name, dbConnection)
-        DO = dbSelectRowByAddress(dbDOTable, device_address, dbConnection)
-        DI = dbSelectRowByAddress(dbDITable, device_address, dbConnection)
-        AO = dbSelectRowByAddress(dbAOTable, device_address, dbConnection)
-        AI = dbSelectRowByAddress(dbAITable, device_address, dbConnection)
+
+        tables={}
+        for tb in dbTablesDict:
+                if tb!= 'Devices':
+                        tables[tb]= dbSelectRowByAddress(dbTablesDict[tb], device_address, dbConnection)
+
         return render_template('details.html',
                                device_name=device_name,
                                device_address=device_address,
-                               DO=DO, DI=DI, AO=AO, AI=AI)
+                               tables=tables)
 
 
 
 #method for handle the user commands related to inputs and outputs
 @app.route('/devices/details/command', methods=['POST'])
 def user_command():
-        command = request.form['but'] #returns a string: "device_name device_address node.Pin On/Off"
+        device_name = request.form['deviceName']
+        command = request.form['but'] #returns a string: "selected_table device_address node.Pin On/Off"
         coms = command.split()
-        device_name = coms[0]
+        selected_table = coms[0]
         device_address = coms[1]
         pin = coms[2]
         instruction = coms[3]
@@ -178,10 +189,16 @@ def user_command():
                         writeI2c(int(device_address), int(pin), 1)
                 elif instruction == 'Off':
                         writeI2c(int(device_address), int(pin), 0)
+                elif instruction == 'remove':
+                        dbConnection = dbInit()[2]
+                        dbDelete(dbTablesDict[selected_table], int(device_address), int(pin), dbConnection)
+                else:
+                        return instruction
+
         except Exception, e:
                 return str(e)
-                
-        return redirect(url_for('particualr_device_details', device_name=device_name))
+        
+        return redirect(url_for('particular_device_details', device_name=device_name))
 
 
 

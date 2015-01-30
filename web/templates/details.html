@@ -1,6 +1,26 @@
 {% extends 'index.html' %}
 {% block devices %}
 
+
+<!--JSON to change sensor value -->
+<script type="text/javascript">
+	
+	$(function(){
+		var submission = function(e){
+				$.getJSON($SCRIPT_ROOT + '/_stuff',
+				{s: $(this).val()},
+				function(data){
+					$("#sensor"+data.pin).text(data.value);
+				});
+				return false;
+			};
+		$('#read-btn').bind('click', submission);		
+	});
+	
+</script>
+
+
+
 <body>
 	
 	<h2>{{ device_name }}</h2>
@@ -13,18 +33,36 @@
 		  {% for table in tables %}
 			{% for node in tables[table] %}
 				<div class="form-group">
-    					<label class="col-sm-2 control-label">{{ table }}</label>
-    					<div class="col-sm-10" style="width: 100px">
-      						<label class="col-sm-2 control-label">{{ node.Pin }}</label>
-      					
+    					<label class="col-sm-1 control-label">{{ table }}</label>
+    					<div class="col-sm-5" style="width: 100px">
+      						<label class="col-sm-1 control-label">{{ node.Pin }}</label>
     					</div>
-    					<div class="col-sm-20">
-    						<button type="submit" name="but" class="btn btn-success" value="{{ table }} {{ device_address }} {{ node.Pin }} On">On</button>
-    						<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} Off">Off</button>
+    					
+    					<div class="col-sm-2">
+    						{% if 'I' in table %}
+    							<button id="read-btn" name="but" class="btn btn-success" value="{{ table }} {{ device_address }} {{ node.Pin }} read">Read</button>
+    							<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} cancel">Cancel</button>
+    							
+    						{% else %}
+    							<button type="submit" name="but" class="btn btn-success" value="{{ table }} {{ device_address }} {{ node.Pin }} On">On</button>
+    							<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} Off">Off</button>
+    						{% endif %}
+    					</div>
+    					
+    					<div class="col-sm-3">
+    						{% if 'I' in table %}
+    							<div id="log div">
+    						  		<label class="control-label" name="log" id="sensor{{ node.Pin }}"></label>
+    							</div>
     						
-    						
-    						  <button type="submit" name="but" class="btn btn-default" value="{{ table }} {{ device_address }} {{ node.Pin }} remove">
-    						    <span class="glyphicon glyphicon-remove-circle" aria-hidden="true">X</span>
+    						{% endif %}
+    					</div>
+    					
+    					
+    					<div class="col-sm-2">
+    						  <button type="submit" name="but" class="btn btn-warning" value="{{ table }} {{ device_address }} {{ node.Pin }} edit">Edit</button>
+    						  
+    						  <button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} remove">X
     						  </button>
     						
     					</div>
@@ -123,6 +161,12 @@
 	</div>
 <!-- end of modal -->
 	
+	
+	
+	
+	
+
+
 </body>
 	
 {% endblock %}

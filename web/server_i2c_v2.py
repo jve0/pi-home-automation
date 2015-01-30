@@ -1,9 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from server_db import *
 import datetime
 
 import smbus
 import time
+
+from threading import Thread
+from flask import Flask, render_template, session, request
+from flask.ext.socketio import SocketIO, emit, join_room, leave_room, \
+    close_room, disconnect
 
 app = Flask(__name__)
 
@@ -39,23 +44,26 @@ dbTablesDict = {'Devices': dbDevicesTable,
 i2c_address = 0x04
 i2c_cmd = 0x01
 
-
+#Threading and sockets
+##thread = None
+##socketio = SocketIO(app)
 
 #method for writing to the i2c bus
-def writeI2c(address, pin, value):
-        bus.write_i2c_block_data(address, i2c_cmd, ConvertListToSend(pin,value))
-
-def ConvertListToSend(pin, value):
-        converted = []
-        converted.append(pin)
-        converted.append(value)
-        return converted
+def writeI2c(address, pin, R_W, A_D, value):
+        bus.write_i2c_block_data(address, i2c_cmd, [pin, R_W, A_D, value])
 
 
 #method for reading to the i2c bus
-def readByte():
-        number = bus.read_byte(address)
-        return number
+def readI2c(address, pin):
+        writeI2c(address, pin, 0, 0, 0) #format: [address, pin, R/W, A/D, value]
+        time.sleep(0.1) #delay 0.1 seconds. Otherwise you get IOError
+        data = bus.read_byte(address)
+        
+        return data
+
+
+
+error = ""
 
 
 #code to execute when entered '/'
@@ -101,6 +109,12 @@ def my_form_post():
 #method for the devices tab
 @app.route('/devices')
 def devicesList():
+##        global thread
+##        if thread != None:
+##                test_disconnect()
+##                thread = None
+                
+        
         #create a dict with all the devices in the i2c_devices table
         dbConnection = dbInit()[2]
         values = dbSelectTable(dbDevicesTable, dbConnection)
@@ -120,7 +134,7 @@ def new_device():
                 if device.Name == name:
                         break
         else:
-                #create new item in i2c_devices table in database
+                '''create new item in i2c_devices table in database'''
                 dbInsert(dbDevicesTable, dbConnection, new_device_args)
         return redirect('/devices')
 
@@ -165,11 +179,22 @@ def particular_device_details(device_name):
         for tb in dbTablesDict:
                 if tb!= 'Devices':
                         tables[tb]= dbSelectRowByAddress(dbTablesDict[tb], device_address, dbConnection)
+        '''threading'''
+##        global thread
+##        if thread is None:
+##                thread = Thread(target=background_thread)
+##                thread.start()
+        '''in case ther's an error'''
+        global error
+        current_error = error
+        error = ""
 
+        '''render'''
         return render_template('details.html',
                                device_name=device_name,
                                device_address=device_address,
-                               tables=tables)
+                               tables=tables,
+                               error=current_error)
 
 
 
@@ -184,27 +209,111 @@ def user_command():
         pin = coms[2]
         instruction = coms[3]
 
+        '''Determine wheter is an analog or digital signal'''
+        if 'D' in selected_table:
+                A_D = 1
+        elif 'A' in selected_table:
+                A_D = 0
+                 
+        '''Determine wheter is a Write or a Read command'''
+        if 'I' in selected_table:
+                R_W = 0
+        elif 'O' in selected_table:
+                R_W = 1
+
+        '''clasified regarding the instruction'''
+        if instruction == 'On' and R_W == 1:
+                value = 1
+        elif instruction == 'Off' or R_W == 0:
+                value = 0
+        else:
+                return instruction
+
+
         try:
-                if instruction == 'On':
-                        writeI2c(int(device_address), int(pin), 1)
-                elif instruction == 'Off':
-                        writeI2c(int(device_address), int(pin), 0)
-                elif instruction == 'remove':
+                if instruction == 'remove':
                         dbConnection = dbInit()[2]
                         dbDelete(dbTablesDict[selected_table], int(device_address), int(pin), dbConnection)
                 else:
-                        return instruction
-
+                        writeI2c(int(device_address), int(pin), R_W, A_D, value)
         except Exception, e:
-                return str(e)
+                global error
+                error = str(e)
         
         return redirect(url_for('particular_device_details', device_name=device_name))
+
+
+@app.route('/_stuff', methods=['GET'])
+def change_html_value():
+        input = request.args.get('s')
+        sub_inputs = input.split()
+        table = sub_inputs[0]
+        address = sub_inputs[1]
+        pin = sub_inputs[2]
+        instr = sub_inputs[3]
+
+        try:
+                data = readI2c(int(address), int(pin))
+        except Exception, e:
+                global error
+                error = str(e)
+                data = error
+        
+        return jsonify(value=str(data), pin=str(pin))
+
+####
+#### methods for the socket
+####
+##def background_thread():
+##    """Example of how to send server generated events to clients."""
+##    count = 0
+##    while True:
+##        time.sleep(10)
+##        count += 1
+##        socketio.emit('my response',
+##                      {'data': 'Server generated event', 'count': count},
+##                      namespace='/test')
+##        #socketio.emit('my response',{'data': 
+##
+###simple emit
+##@socketio.on('my event', namespace='/test')
+##def test_message(message):
+##    session['receive_count'] = session.get('receive_count', 0) + 1
+##    emit('my response',
+##         {'data': message['data'], 'count': session['receive_count']})
+##
+###broadcast emit
+##@socketio.on('my broadcast event', namespace='/test')
+##def test_broadcast_message(message):
+##    session['receive_count'] = session.get('receive_count', 0) + 1
+##    emit('my response',
+##         {'data': message['data'], 'count': session['receive_count']},
+##         broadcast=True)
+##
+###yes
+##@socketio.on('disconnect request', namespace='/test')
+##def disconnect_request():
+##    session['receive_count'] = session.get('receive_count', 0) + 1
+##    emit('my response',
+##         {'data': 'Disconnected!', 'count': session['receive_count']})
+##    disconnect()
+##
+###maybe
+##@socketio.on('connect', namespace='/test')
+##def test_connect():
+##    emit('my response', {'data': 'Connected', 'count': 0})
+##
+###don't think so
+##@socketio.on('disconnect', namespace='/test')
+##def test_disconnect():
+##    print('Client disconnected')
+##
 
 
 
 #run the server
 if __name__ == "__main__":
-	app.run(host='0.0.0.0', port=80, debug=True)
+        app.run(host='0.0.0.0', port=80,debug=True)
 
 
 

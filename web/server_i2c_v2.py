@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from server_db import *
 import datetime
@@ -5,12 +8,20 @@ import datetime
 import smbus
 import time
 
-from threading import Thread
+from i2c_threads import create_CommunicationThread
+
 from flask import Flask, render_template, session, request
-from flask.ext.socketio import SocketIO, emit, join_room, leave_room, \
-    close_room, disconnect
+from flask.ext.socketio import SocketIO, emit, disconnect
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+app.debug = True
+
+#turn the flask app into a socketio app
+socketio = SocketIO(app)
+
+#dict to store the different threads created
+comThreads = {}
 
 #data to send to the html
 templateData = {
@@ -40,28 +51,6 @@ dbTablesDict = {'Devices': dbDevicesTable,
                 'AI': dbAITable,
                 'AO': dbAOTable}
 
-#i2c and gpio address. This is the address we setup in the arduino program
-i2c_address = 0x04
-i2c_cmd = 0x01
-
-#Threading and sockets
-##thread = None
-##socketio = SocketIO(app)
-
-#method for writing to the i2c bus
-def writeI2c(address, pin, R_W, A_D, value):
-        bus.write_i2c_block_data(address, i2c_cmd, [pin, R_W, A_D, value])
-
-
-#method for reading to the i2c bus
-def readI2c(address, pin):
-        writeI2c(address, pin, 0, 0, 0) #format: [address, pin, R/W, A/D, value]
-        time.sleep(0.1) #delay 0.1 seconds. Otherwise you get IOError
-        data = bus.read_byte(address)
-        
-        return data
-
-
 
 error = ""
 
@@ -90,35 +79,29 @@ def my_form_post():
         txtPin = int(request.form['txtPin'])
 
         '''if the chkI2c is checked, then send the data through the bus'''
-        if rdbI2c:
-                rdbOnOff = True if request.form['rdbOnOff']=='on' else False
-                try:
-                        if rdbOnOff:
-                                writeI2c(txtPin, txtText)
-                                templateData['chat'].append("enviado")
-                        else:
-                                writeI2c(txtPin, 0)
-                                templateData['chat'].append("enviado")
-                except Exception, e:
-                        return str(e)        
-        else:
-                templateData['chat'].append("tu mensaje no se ha enviado porque no has elegido esa opcion")
+##        if rdbI2c:
+##                rdbOnOff = True if request.form['rdbOnOff']=='on' else False
+##                try:
+##                        if rdbOnOff:
+##                                writeI2c(txtPin, txtText)
+##                                templateData['chat'].append("enviado")
+##                        else:
+##                                writeI2c(txtPin, 0)
+##                                templateData['chat'].append("enviado")
+##                except Exception, e:
+##                        return str(e)        
+##        else:
+##                templateData['chat'].append("tu mensaje no se ha enviado porque no has elegido esa opcion")
         '''render'''
         return render_template('main.html', **templateData)
 
 #method for the devices tab
 @app.route('/devices')
-def devicesList():
-##        global thread
-##        if thread != None:
-##                test_disconnect()
-##                thread = None
-                
-        
-        #create a dict with all the devices in the i2c_devices table
+def devicesList():    
+        #gets a dict with all the devices in the i2c_devices table
         dbConnection = dbInit()[2]
-        values = dbSelectTable(dbDevicesTable, dbConnection)
-        return render_template('devices.html', devicesData=values)
+        devicesData = dbSelectTable(dbDevicesTable, dbConnection)
+        return render_template('devices.html', devicesData=devicesData)
 
 #method for the new devices form
 @app.route('/devices/new_device', methods=['POST'])
@@ -172,24 +155,21 @@ def device_details():
 #method for the page of each device
 @app.route('/<device_name>')
 def particular_device_details(device_name):
-        dbConnection = dbInit()[2]
-        device_address = dbSelectAddressByName(dbDevicesTable, device_name, dbConnection)
-
+        '''get the address of the device, looking for the name received in the devices table'''
+        device_address = dbSelectAddressByName(dbDevicesTable, device_name, dbInit()[2])
         tables={}
+        '''with the address found, look in every table and get the data'''
         for tb in dbTablesDict:
                 if tb!= 'Devices':
                         tables[tb]= dbSelectRowByAddress(dbTablesDict[tb], device_address, dbConnection)
-        '''threading'''
-##        global thread
-##        if thread is None:
-##                thread = Thread(target=background_thread)
-##                thread.start()
-        '''in case ther's an error'''
+
+        '''in case there's an error'''
         global error
         current_error = error
         error = ""
-
+             
         '''render'''
+        #return tables
         return render_template('details.html',
                                device_name=device_name,
                                device_address=device_address,
@@ -209,7 +189,9 @@ def user_command():
         pin = coms[2]
         instruction = coms[3]
 
-        '''Determine wheter is an analog or digital signal'''
+        value = 0
+
+        '''Determine whether is an analog or digital signal'''
         if 'D' in selected_table:
                 A_D = 1
         elif 'A' in selected_table:
@@ -234,8 +216,11 @@ def user_command():
                 if instruction == 'remove':
                         dbConnection = dbInit()[2]
                         dbDelete(dbTablesDict[selected_table], int(device_address), int(pin), dbConnection)
-                else:
-                        writeI2c(int(device_address), int(pin), R_W, A_D, value)
+                else:                   
+                        myCom = create_CommunicationThread('first_thread', int(device_address), int(pin),
+                                                    A_D, R_W, value, bus, 2, socketio)
+                        myCom.start()
+                                                                    
         except Exception, e:
                 global error
                 error = str(e)
@@ -243,78 +228,72 @@ def user_command():
         return redirect(url_for('particular_device_details', device_name=device_name))
 
 
-@app.route('/_stuff', methods=['GET'])
-def change_html_value():
-        input = request.args.get('s')
-        sub_inputs = input.split()
-        table = sub_inputs[0]
-        address = sub_inputs[1]
-        pin = sub_inputs[2]
-        instr = sub_inputs[3]
-
-        try:
-                data = readI2c(int(address), int(pin))
-        except Exception, e:
-                global error
-                error = str(e)
-                data = error
-        
-        return jsonify(value=str(data), pin=str(pin))
 
 ####
 #### methods for the socket
-####
-##def background_thread():
-##    """Example of how to send server generated events to clients."""
-##    count = 0
-##    while True:
-##        time.sleep(10)
-##        count += 1
-##        socketio.emit('my response',
-##                      {'data': 'Server generated event', 'count': count},
-##                      namespace='/test')
-##        #socketio.emit('my response',{'data': 
-##
-###simple emit
-##@socketio.on('my event', namespace='/test')
-##def test_message(message):
-##    session['receive_count'] = session.get('receive_count', 0) + 1
-##    emit('my response',
-##         {'data': message['data'], 'count': session['receive_count']})
-##
-###broadcast emit
-##@socketio.on('my broadcast event', namespace='/test')
-##def test_broadcast_message(message):
-##    session['receive_count'] = session.get('receive_count', 0) + 1
-##    emit('my response',
-##         {'data': message['data'], 'count': session['receive_count']},
-##         broadcast=True)
-##
-###yes
-##@socketio.on('disconnect request', namespace='/test')
-##def disconnect_request():
-##    session['receive_count'] = session.get('receive_count', 0) + 1
-##    emit('my response',
-##         {'data': 'Disconnected!', 'count': session['receive_count']})
-##    disconnect()
-##
-###maybe
-##@socketio.on('connect', namespace='/test')
-##def test_connect():
-##    emit('my response', {'data': 'Connected', 'count': 0})
-##
-###don't think so
-##@socketio.on('disconnect', namespace='/test')
-##def test_disconnect():
-##    print('Client disconnected')
-##
+####        
 
+#connection of the socket
+@socketio.on('connect', namespace='/test')
+def test_connect():
+        pass
 
+@socketio.on('start reading', namespace='/test')
+def socket_start_reading(msg):
+        sub_inputs = msg['data'].split()
+        table = sub_inputs[0]
+        device_name = sub_inputs[1]
+        address = sub_inputs[2]
+        pin = sub_inputs[3]
+        instr = sub_inputs[4]
+        
+        if instr == 'read':
+                for key in comThreads:
+                        if key == (address + pin):
+                                emit('reading',
+                                     {'data': 'thread already started',
+                                      'pin': pin}, namespace='/test')
+                                break
+                else:
+                        myCom = create_CommunicationThread('thread', int(address), int(pin),
+                                                    0, 0, 0, bus, 2, socketio)
+                        
+                        comThreads[address + pin] = myCom
+                        comThreads[address + pin].start()
+                
+        elif instr == 'cancel':
+                if (address + pin) in comThreads:
+                        if comThreads[address + pin].getExitFlag():
+                                emit('message', {'data': 'thread cancelling'})
+                                comThreads[address + pin].setExitFlag()
+                                comThreads.pop(address + pin, None)
+                        elif not comThreads[address + pin].getExitFlag():
+                                comThreads.pop(address + pin, None)
+                                emit('message', {'data':str(comThreads[address + pin].getExitFlag())})
+                        
+                        else:
+                               emit('message', {'data': 'thread not cancelled'})
+                else:
+                        emit('message', {'data': 'thread does not exist'})
+
+                emit('reading',{'data': '-',
+                                'pin': pin}, namespace='/test')
+
+        elif instr == 'remove':
+                try:
+                        dbConnection = dbInit()[2]
+                        dbDelete(dbTablesDict[table], int(address), int(pin), dbConnection)
+                        socketio.emit('redirect', {'device_name': device_name})
+                except Exception, e:
+                        global error
+                        error = e
+                
+        
+        else:
+                emit('message', {'data': instr})
 
 #run the server
 if __name__ == "__main__":
-        app.run(host='0.0.0.0', port=80,debug=True)
-
-
+        socketio.run(app, host='0.0.0.0', port=80)
 
 

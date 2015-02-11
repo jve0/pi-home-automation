@@ -74,22 +74,22 @@ def dbDrop(table, engine, connection):
     conn = engine.connect()
     
 
-s = dbInit()
-engine = s[0]
-metadata = s[1]
-conn = s[2]
-
-table = dbCreateTables(metadata, engine, 2)
-##ins = [{'Pin': 10, 'Address':12, 'Name': 'test'}]
-##dbInsert(table, conn, ins)
-
-dbDelete(table, 12, 10, conn)
-rs = dbSelectTable(table, conn)
-
-for row in rs:
-    print str(row.Address) + " + " + str(row.Pin)
-
-##ad = dbSelectRowByAddress(table, 12, conn)
-##print ad
-
-#dbDrop(table, engine, conn)
+##s = dbInit()
+##engine = s[0]
+##metadata = s[1]
+##conn = s[2]
+##
+##table = dbCreateTables(metadata, engine, 2)
+####ins = [{'Pin': 10, 'Address':12, 'Name': 'test'}]
+####dbInsert(table, conn, ins)
+##
+##dbDelete(table, 12, 10, conn)
+##rs = dbSelectTable(table, conn)
+##
+##for row in rs:
+##    print str(row.Address) + " + " + str(row.Pin)
+##
+####ad = dbSelectRowByAddress(table, 12, conn)
+####print ad
+##
+###dbDrop(table, engine, conn)

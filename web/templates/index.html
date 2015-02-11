@@ -2,19 +2,23 @@
 	<head>
 		<title>{{ title }}</title>
 		<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
-		
+		<style>
+			.table td{ text-align:center; }
+		</style>
 	</head>
 	
 	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     	
-    	<!-- Include all compiled plugins (below), or include individual files as needed -->
     	<script type="text/javascript" src="static/bootstrap.min.js"></script>
     	
+    	<!-- Javascript code required for json -->
 	<script type="text/javascript">
  		var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 	</script>
 	
+	<!-- plug in required for sockets management -->
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
 	
 	
 <!--start of navigation bar -->
@@ -81,7 +85,7 @@
 		{% endblock %}
 	
 		{% block devices %}
-		{% endblock %}
+  		{% endblock %}
 	</body>
 	
 	

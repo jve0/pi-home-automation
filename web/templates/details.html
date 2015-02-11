@@ -4,78 +4,157 @@
 
 <!--JSON to change sensor value -->
 <script type="text/javascript">
-	
-	$(function(){
-		var submission = function(e){
-				$.getJSON($SCRIPT_ROOT + '/_stuff',
-				{s: $(this).val()},
-				function(data){
-					$("#sensor"+data.pin).text(data.value);
-				});
-				return false;
-			};
-		$('#read-btn').bind('click', submission);		
-	});
+	$(document).ready(function(){
+		//connect to the socket server
+		namespace ='/test';
+		var socket = socket = io.connect('http://' + document.domain + ':' + location.port+ namespace); 
+		
+		socket.on('connect', function(){
+			$("#lecture").text('Connected!');
+		});
+			
+		
+		//receive details from server
+		socket.on('message', function(msg){
+			$("#lecture").text(msg.data);
+		});
+		
+		
+		//receive details from server
+		socket.on('reading', function(msg){
+			//send it to the sensor pin
+			$("#sensor"+msg.pin).text(msg.data);
+
+		});
+		
+		socket.on('redirect', function(msg){
+			window.location.href = 'http://' + document.domain + '/'+ msg.device_name;
+
+		});
+		
+		$('button[type="submit"]').on('click', function(){
+			$('form#reading_form').data('button', this.value);
+		});
+		
+		
+		$('form#reading_form').submit(function(event) {
+			value = $(this).data('button')
+                	$("#lecture").text(value);
+                	
+                	socket.emit('start reading', {data:  value});
+                	return false;
+            	});
+            	
+            	
+		
+	}); //end of document.ready
 	
 </script>
 
 
 
 <body>
-	
-	<h2>{{ device_name }}</h2>
-	<p>address: {{ device_address }}</p>
+<div class="container table-responsive">
+	<table class= "table table-hover table-stripped">
+	   <tr>
+		<label class="col-sm-4 control-label" id="lecture">---</label> 
+	   </tr>
 	
 	
 <!-- start of form -->
 	<div>
-		<form action="{{ url_for('user_command') }}" method="POST" class="form-horizontal">
+		<form action="{{ url_for('user_command') }}" method="POST">
 		  {% for table in tables %}
+		    {% if 'O' in table %}
 			{% for node in tables[table] %}
-				<div class="form-group">
-    					<label class="col-sm-1 control-label">{{ table }}</label>
-    					<div class="col-sm-5" style="width: 100px">
+				<!--<div class="form-group container">-->
+				<tr>
+				   <td class="col-sm-1">
+    					<label class="control-label">{{ table }}</label>
+    				   </td>
+    				   <td class="col-sm-1">
+    					<div style="width: 100px">
       						<label class="col-sm-1 control-label">{{ node.Pin }}</label>
     					</div>
-    					
-    					<div class="col-sm-2">
-    						{% if 'I' in table %}
-    							<button id="read-btn" name="but" class="btn btn-success" value="{{ table }} {{ device_address }} {{ node.Pin }} read">Read</button>
-    							<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} cancel">Cancel</button>
-    							
-    						{% else %}
+    				   </td>
+    				   <td class="col-sm-2">	
+    					<div >
     							<button type="submit" name="but" class="btn btn-success" value="{{ table }} {{ device_address }} {{ node.Pin }} On">On</button>
     							<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} Off">Off</button>
-    						{% endif %}
     					</div>
+    				   </td>
     					
-    					<div class="col-sm-3">
-    						{% if 'I' in table %}
-    							<div id="log div">
-    						  		<label class="control-label" name="log" id="sensor{{ node.Pin }}"></label>
-    							</div>
-    						
-    						{% endif %}
-    					</div>
+    				   <td>
+    				   </td>
     					
-    					
-    					<div class="col-sm-2">
+    				   <td class="col-sm-3">
+    					<div >
     						  <button type="submit" name="but" class="btn btn-warning" value="{{ table }} {{ device_address }} {{ node.Pin }} edit">Edit</button>
-    						  
+
     						  <button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} remove">X
     						  </button>
     						
     					</div>
     					
     					 <input type="checkbox" name="deviceName" value="{{ device_name }}" checked=True hidden=True>
-    					
-  				</div>
+    				   </td>
+    				</tr>	
+  				<!--</div>end of container -->
 			{% endfor %}
+		      {% endif %}
 		  {% endfor %}
 		</form>
+		
+		<form id="reading_form" method="POST" action='#'>
+		{% for table in tables %}
+		   {% if 'I' in table %}
+		        {% for node in tables[table] %}
+		        <tr>
+		           <div class="form-group container">
+		             <td class="col-sm-1">
+		               <label class="control-label">{{ table }}</label>
+		             </td>
+		             <td class="col-sm-1">
+    			          <div  style="width: 100px">
+      			             <label class="col-sm-1 control-label">{{ node.Pin }}</label>
+      			          </div>
+      			      </td>
+      			      <td class="col-sm-3">
+		             	  <div >
+		               		<button type="submit" name="read" id="read-btn" class="btn btn-success" value="{{ table }} {{ device_name }} {{ device_address }} {{ node.Pin }} read">Read</button>
+		               
+		               		<button type="submit" name="read" id="cancel_read_btn" class="btn btn-danger" value="{{ table }} {{ device_name }} {{ device_address }} {{ node.Pin }} cancel">Cancel</button>
+		            	 </div>
+		              </td>
+		              <td class="col-sm-2">
+		             	<div >
+					<div id="log div">
+    				   		<label class="control-label" name="readings_log" id="sensor{{ node.Pin }}"></label>
+    					</div>
+    			     	</div>
+    			      </td>
+    			      <td class="col-sm-3">
+    			     	
+    			     	<div >
+    					<button type="submit" name="but" class="btn btn-warning" value="{{ table }} {{ device_name }} {{ device_address }} {{ node.Pin }} edit">Edit</button>
+    						  
+    					<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_name }} {{ device_address }} {{ node.Pin }} remove">X
+    						  </button>
+    						
+    				</div>
+    				</td>
+    			     	
+    			     	
+    			     	
+		           </div>
+			  </tr>
+		        {% endfor %}
+		     {% endif %}
+		 {% endfor %}
+				        </form>
 	</div>
 <!-- end of form -->
-	
+</table>
 	
 	
 	
@@ -89,11 +168,11 @@
 	
 
 <!-- Button that fires up the Modal -->
-	<div>
+	<div class="container">
 		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#new_node_modal">New node</button>
 	</div>
 
-
+</div> <!-- end of container div -->
 
 
 

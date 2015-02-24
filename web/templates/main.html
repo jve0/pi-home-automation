@@ -3,96 +3,40 @@
 
 <body>
 
-	<div class="myclass">
-		<h1>Hello world!</h1>
-		<h2>The date and time on the server is: {{ time }}</h2>
+	<div class= "container" >
+		<div class = "jumbotron">
+		  <center>
+			<h1>Welcome to your self-built smart home!!</h1>
+			<p>Get to know your house and start automating it<p>
+			<a href="/devices" class ="btn btn-success">Go</a>
+		  <center>
+		</div>
 	</div>
-		
-		
-		
-<!-- start of form -->
-	<div>
-		{#this is a form and the text is sent to the python file#}
-		<form action="." method="POST" class="form-horizontal">
-			<div class="form-group">
-    				<label for="txtText" class="col-sm-2 control-label">Text</label>
-    				<div class="col-sm-10" style="width: 200px">
-      					<input type="text" class="form-control" name="txtText" id="txtText" placeholder="Text">
-    				</div>
-  			</div>
-  			<div class="form-group">
-    				<label for="txtPin" class="col-sm-2 control-label">Pin</label>
-    				<div class="col-sm-10" style="width: 200px">
-      					<input type="text" class="form-control" name="txtPin" id="txtPin" placeholder="Pin">
-    				</div>
-  			</div>
-  			<div class="form-group">
-    				<div class="col-sm-offset-2 col-sm-10">
-      					<div class="radio">
-        					<label class="radio-inline">
-  							<input type="radio" name="rdbOnOff" value="on"> On
-						</label>
-						<label class="radio-inline">
-  							<input type="radio" name="rdbOnOff" value="off"> Off
-						</label>
-      					</div>
-    				</div>
-  			</div>
-  			<div class="form-group">
-    				<div class="col-sm-offset-2 col-sm-10">
-      					<div class="radio">
-        					<label class="radio-inline">
-  							<input type="radio" name="rdbI2c" value="yes"> i2c yes
-						</label>
-						<label class="radio-inline">
-  							<input type="radio" name="rdbI2c" value="no"> i2c no
-						</label>
-      					</div>
-    				</div>
-  			</div>
-  			<div class="form-group">
-    				<div class="col-sm-offset-2 col-sm-10">
-      					<div class="radio">
-        					<label class="radio-inline">
-  							<input type="radio" name="rdbIO" value="Input"> Input
-						</label>
-						<label class="radio-inline">
-  							<input type="radio" name="rdbIO" value="Output"> Output
-						</label>
-      					</div>
-    				</div>
-  			</div>
-  			<div class="form-group">
-    				<div class="col-sm-offset-2 col-sm-10">
-      					<div class="radio">
-        					<label class="radio-inline">
-  							<input type="radio" name="rdbDA" value="Digital"> Digital
-						</label>
-						<label class="radio-inline">
-  							<input type="radio" name="rdbDA" value="Analog"> Analog
-						</label>
-      					</div>
-    				</div>
-  			</div>
-  			<div class="form-group">
-    				<div class="col-sm-offset-2 col-sm-10">
-      					<button type="submit" class="btn btn-default">Send</button>
-    				</div>
-  			</div>
-		</form>
-	</div>
-<!-- end of form -->
-
 	
-<!-- loop for the chat -->
-	<div class="chat_text">
-		{% for item in chat%}
-		<p>{{ item }}</p>
-		{% endfor %}
+	<div class="container">
+		<center>
+			<h2><mark>What can you expect from a home automation system?</mark></h2>
+		</center>
+		<div class="row">
+			<div class="col-md-3">
+				<h3>Simple to use</h3>
+				<p>Once installed the system, simply go to your app or browser via pc, tablet, smarphone...</p>
+			</div>
+			<div class="col-md-3">
+				<h3>Improve comfort</h3>
+				<p>Have sets of actions automatised and have full control at your fingertips<p>
+			</div>
+			<div class="col-md-3">
+				<h3>Peace of mind</h3>
+				<p>Have you ever had the feeling that you forgot to switch off the lights when leaving the house? Automating your house can solve that problem<p>
+			</div>
+			<div class="col-md-3">
+				<h3>Save money</h3>
+				<p>There's the misconception that a "fancy" home automation system costs a fortune, when in fact they are affordable and can save you some money in your monthly gas, water and electricity bills<p>
+			</div>
+		</div>
 	</div>
-<!-- end of chat -->
 		
-	
 </body>
 	
 {% endblock %}

@@ -4,7 +4,7 @@
 <body>
 
 <!-- table of devices --!>
-	<div class="panel panel-default">
+	<div class="table-responsive container">
   		<div class="panel-heading">
     			<h3 class="panel-title">List of connected devices</h3>
  		 </div>
@@ -17,9 +17,6 @@
   					<td>Name</td>
   					<td>Address</td>
   				</tr>
-  				<tr>
-  					
-  				</tr>
   				
 				{% for device in devicesData %}
 				<tr>
@@ -30,7 +27,7 @@
   			</table>
   		</div>
   		</form>
-	</div>
+
 <!-- end of table of devices -->
   	
   
@@ -38,7 +35,7 @@
 	<div>
 		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#new_item_modal">New item</button>
 	</div>
-
+</div> <!-- end of container -->
 	
 <!-- Modal -->
 	<div class="modal fade" id="new_item_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 	<head>
 		<title>{{ title }}</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+        	<link href="static/css/ripples.min.css" rel="stylesheet">
+        	<link href="static/css/material-wfont.min.css" rel="stylesheet">
 		<style>
 			.table td{ text-align:center; }
-	
+			body{padding-bottom: 75px;}
 
 		</style>
 	</head>
 	
 	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    	
-    	<script type="text/javascript" src="static/bootstrap.min.js"></script>
-    	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	
     	<!-- Javascript code required for json -->
 	<script type="text/javascript">
  		var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
@@ -50,16 +50,7 @@
     				</div><!-- /.navbar-collapse -->
   			</div><!-- /.container-fluid -->
 		</nav>
-<!-- end of navigation bar -->
-<!-- navigation footer -->
-
-		<div class="navbar navbar-default navbar-fixed-bottom">
-			<div class="container">
-				<p class="navbar-text">Site developed by Javier Vidal</p>
-				<p class="navbar-text pull-right">Edinburgh Napier University</p>
-			</div>
-		</div>
-	
+<!-- end of navigation bar -->	
 
 	</body>
 
@@ -96,6 +87,19 @@
 	</body>
 	
 	
+	
+	
+	<script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+        <script src="static/js/ripples.min.js"></script>
+        <script src="static/js/material.min.js"></script>
+        
+        <script>
+            $(document).ready(function() {
+                $.material.init();
+            });
+        </script>
     	
 	
 	<!-- Javascript for alerts management -->

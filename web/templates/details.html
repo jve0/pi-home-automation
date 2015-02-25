@@ -63,9 +63,9 @@
 	
 <!-- start of form -->
 	<div>
-		<form action="{{ url_for('user_command') }}" method="POST">
-		  {% for table in tables %}
-		    {% if 'O' in table %}
+		<form id="reading_form" method="POST" action='#'>
+		{% for table in tables %}
+		   {% if 'O' in table %}
 			{% for node in tables[table] %}
 				<!--<div class="form-group container">-->
 				<tr>
@@ -79,8 +79,8 @@
     				   </td>
     				   <td class="col-sm-2">	
     					<div >
-    							<button type="submit" name="but" class="btn btn-success" value="{{ table }} {{ device_address }} {{ node.Pin }} On">On</button>
-    							<button type="submit" name="but" class="btn btn-danger" value="{{ table }} {{ device_address }} {{ node.Pin }} Off">Off</button>
+    							<button type="submit" name="but" class="btn btn-success" value="{{ table }}  {{ device_name }} {{ device_address }} {{ node.Pin }} On">On</button>
+    							<button type="submit" name="but" class="btn btn-danger" value="{{ table }}  {{ device_name }} {{ device_address }} {{ node.Pin }} Off">Off</button>
     					</div>
     				   </td>
     					
@@ -101,13 +101,7 @@
     				</tr>	
   				<!--</div>end of container -->
 			{% endfor %}
-		      {% endif %}
-		  {% endfor %}
-		</form>
-		
-		<form id="reading_form" method="POST" action='#'>
-		{% for table in tables %}
-		   {% if 'I' in table %}
+		   {% elif 'I' in table %}
 		        {% for node in tables[table] %}
 		        <tr>
 		           <div class="form-group container">

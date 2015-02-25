@@ -179,54 +179,54 @@ def particular_device_details(device_name):
 
 
 #method for handle the user commands related to inputs and outputs
-@app.route('/devices/details/command', methods=['POST'])
-def user_command():
-        device_name = request.form['deviceName']
-        command = request.form['but'] #returns a string: "selected_table device_address node.Pin On/Off"
-        coms = command.split()
-        selected_table = coms[0]
-        device_address = coms[1]
-        pin = coms[2]
-        instruction = coms[3]
-
-        value = 0
-
-        '''Determine whether is an analog or digital signal'''
-        if 'D' in selected_table:
-                A_D = 1
-        elif 'A' in selected_table:
-                A_D = 0
-                 
-        '''Determine wheter is a Write or a Read command'''
-        if 'I' in selected_table:
-                R_W = 0
-        elif 'O' in selected_table:
-                R_W = 1
-
-        '''clasified regarding the instruction'''
-        if instruction == 'On' and R_W == 1:
-                value = 1
-        elif instruction == 'Off' or R_W == 0:
-                value = 0
-        else:
-                return instruction
-
-
-        try:
-                if instruction == 'remove':
-                        dbConnection = dbInit()[2]
-                        dbDelete(dbTablesDict[selected_table], int(device_address), int(pin), dbConnection)
-                else:                   
-                        myCom = create_CommunicationThread('first_thread', int(device_address), int(pin),
-                                                    A_D, R_W, value, bus, 2, socketio)
-                        myCom.start()
-                                                                    
-        except Exception, e:
-                global error
-                error = str(e)
-        
-        return redirect(url_for('particular_device_details', device_name=device_name))
-
+##@app.route('/devices/details/command', methods=['POST'])
+##def user_command():
+##        device_name = request.form['deviceName']
+##        command = request.form['but'] #returns a string: "selected_table device_address node.Pin On/Off"
+##        coms = command.split()
+##        selected_table = coms[0]
+##        device_address = coms[1]
+##        pin = coms[2]
+##        instruction = coms[3]
+##
+##        value = 0
+##
+##        '''Determine whether is an analog or digital signal'''
+##        if 'D' in selected_table:
+##                A_D = 1
+##        elif 'A' in selected_table:
+##                A_D = 0
+##                 
+##        '''Determine wheter is a Write or a Read command'''
+##        if 'I' in selected_table:
+##                R_W = 0
+##        elif 'O' in selected_table:
+##                R_W = 1
+##
+##        '''clasified regarding the instruction'''
+##        if instruction == 'On' and R_W == 1:
+##                value = 1
+##        elif instruction == 'Off' or R_W == 0:
+##                value = 0
+##        else:
+##                return instruction
+##
+##
+##        try:
+##                if instruction == 'remove':
+##                        dbConnection = dbInit()[2]
+##                        dbDelete(dbTablesDict[selected_table], int(device_address), int(pin), dbConnection)
+##                else:                   
+##                        myCom = create_CommunicationThread('first_thread', int(device_address), int(pin),
+##                                                    A_D, R_W, value, bus, 2, socketio)
+##                        myCom.start()
+##                                                                    
+##        except Exception, e:
+##                global error
+##                error = str(e)
+##        
+##        return redirect(url_for('particular_device_details', device_name=device_name))
+##
 
 
 ####
@@ -289,6 +289,18 @@ def socket_start_reading(msg):
                         error = e
                 
         
+        elif instr == 'On':
+                myCom = create_CommunicationThread('thread', int(address), int(pin),
+                                                   1, 1, 1, bus, 0, socketio)
+                        
+                comThreads[address + pin] = myCom
+                comThreads[address + pin].start()
+        elif instr == 'Off':
+                myCom = create_CommunicationThread('thread', int(address), int(pin),
+                                                   1, 1, 0, bus, 0, socketio)
+                        
+                comThreads[address + pin] = myCom
+                comThreads[address + pin].start()
         else:
                 emit('message', {'data': instr})
 

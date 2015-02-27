@@ -51,6 +51,10 @@ dbTablesDict = {'Devices': dbDevicesTable,
                 'AI': dbAITable,
                 'AO': dbAOTable}
 
+tablesNames = ['Digital Output', 'Digital Input',
+                       'Analog Input', 'Analog Ouptut']
+tablesNamesDict ={'Digital Output':'DO', 'Digital Input':'DI',
+                       'Analog Input':'A)', 'Analog Ouptut':'AO'}
 
 error = ""
 
@@ -68,40 +72,26 @@ def hello():
 
 
 #code to execute when POST a form
-@app.route('/', methods=['POST'])
+@app.route('/')
 def my_form_post():
-        '''access the form elements in the dictionary request.form'''
-        txtText = int(request.form['txtText'])
-        numberBus = request.form['txtText']
-        rdbI2c = True if request.form['rdbI2c']=='yes' else False
-        #rdbIO = True if request.form['rdbIO']=='Input' else False
-        #rdbDA = True if request.form['rdbDA']=='Digital' else False
-        txtPin = int(request.form['txtPin'])
-
-        '''if the chkI2c is checked, then send the data through the bus'''
-##        if rdbI2c:
-##                rdbOnOff = True if request.form['rdbOnOff']=='on' else False
-##                try:
-##                        if rdbOnOff:
-##                                writeI2c(txtPin, txtText)
-##                                templateData['chat'].append("enviado")
-##                        else:
-##                                writeI2c(txtPin, 0)
-##                                templateData['chat'].append("enviado")
-##                except Exception, e:
-##                        return str(e)        
-##        else:
-##                templateData['chat'].append("tu mensaje no se ha enviado porque no has elegido esa opcion")
-        '''render'''
-        return render_template('main.html', **templateData)
+        return render_template('main.html')
 
 #method for the devices tab
 @app.route('/devices')
 def devicesList():    
         #gets a dict with all the devices in the i2c_devices table
         dbConnection = dbInit()[2]
-        devicesData = dbSelectTable(dbDevicesTable, dbConnection)
-        return render_template('devices.html', devicesData=devicesData)
+        devicesTable = dbSelectTable(dbDevicesTable, dbConnection)
+        DITable = dbSelectTable(dbDITable, dbConnection)
+        DOTable = dbSelectTable(dbDOTable, dbConnection)
+        AITable = dbSelectTable(dbAITable, dbConnection)
+        AOTable = dbSelectTable(dbAOTable, dbConnection)
+        tablesList = [DOTable, DITable, AITable, AOTable]
+        
+                
+        return render_template('devices.html', DevicesTable=devicesTable,
+                               TablesList=tablesList, TablesNames = tablesNames,
+                               counter = 0)
 
 #method for the new devices form
 @app.route('/devices/new_device', methods=['POST'])
@@ -127,9 +117,10 @@ def new_node():
         input_name = request.form['inputName']
         input_pin = request.form['inputPin']
         signal = request.form['signal']
+        
         device_address = request.form['deviceAddress']
-        device_name = request.form['deviceName']
 
+        print "name: "+input_name+", address:"+device_address+"."
         args=[{'Name': input_name, 'Address': int(device_address), 'Pin': int(input_pin)}]
 
         if signal == 'Digital Output':
@@ -143,7 +134,7 @@ def new_node():
         else:
                 return str(0)
         
-        return redirect(url_for('particular_device_details', device_name=device_name))
+        return redirect(url_for('devicesList'))
 
 
 #method for the details of the devices
@@ -178,57 +169,6 @@ def particular_device_details(device_name):
 
 
 
-#method for handle the user commands related to inputs and outputs
-##@app.route('/devices/details/command', methods=['POST'])
-##def user_command():
-##        device_name = request.form['deviceName']
-##        command = request.form['but'] #returns a string: "selected_table device_address node.Pin On/Off"
-##        coms = command.split()
-##        selected_table = coms[0]
-##        device_address = coms[1]
-##        pin = coms[2]
-##        instruction = coms[3]
-##
-##        value = 0
-##
-##        '''Determine whether is an analog or digital signal'''
-##        if 'D' in selected_table:
-##                A_D = 1
-##        elif 'A' in selected_table:
-##                A_D = 0
-##                 
-##        '''Determine wheter is a Write or a Read command'''
-##        if 'I' in selected_table:
-##                R_W = 0
-##        elif 'O' in selected_table:
-##                R_W = 1
-##
-##        '''clasified regarding the instruction'''
-##        if instruction == 'On' and R_W == 1:
-##                value = 1
-##        elif instruction == 'Off' or R_W == 0:
-##                value = 0
-##        else:
-##                return instruction
-##
-##
-##        try:
-##                if instruction == 'remove':
-##                        dbConnection = dbInit()[2]
-##                        dbDelete(dbTablesDict[selected_table], int(device_address), int(pin), dbConnection)
-##                else:                   
-##                        myCom = create_CommunicationThread('first_thread', int(device_address), int(pin),
-##                                                    A_D, R_W, value, bus, 2, socketio)
-##                        myCom.start()
-##                                                                    
-##        except Exception, e:
-##                global error
-##                error = str(e)
-##        
-##        return redirect(url_for('particular_device_details', device_name=device_name))
-##
-
-
 ####
 #### methods for the socket
 ####        
@@ -241,13 +181,20 @@ def test_connect():
 @socketio.on('start reading', namespace='/test')
 def socket_start_reading(msg):
         sub_inputs = msg['data'].split()
-        table = sub_inputs[0]
+        table = tablesNamesDict[tablesNames[int(sub_inputs[0])]]
         device_name = sub_inputs[1]
         address = sub_inputs[2]
         pin = sub_inputs[3]
         instr = sub_inputs[4]
         
-        if instr == 'read':
+        if instr == 'delete':
+                dbConnection = dbInit()[2]
+                if dbDeleteDevice(dbTablesDict, address, dbConnection):
+                        emit('message', {'data': 'success deleting'})
+                        emit('redirect',{'url': url_for('devicesList')})
+                else:
+                        emit('message', {'data': 'fail deleting'})
+        elif instr == 'read':
                 for key in comThreads:
                         if key == (address + pin):
                                 emit('reading',
@@ -276,14 +223,14 @@ def socket_start_reading(msg):
                 else:
                         emit('message', {'data': 'thread does not exist'})
 
-                emit('reading',{'data': '-',
+                emit('reading',{'data': '',
                                 'pin': pin}, namespace='/test')
 
         elif instr == 'remove':
                 try:
                         dbConnection = dbInit()[2]
                         dbDelete(dbTablesDict[table], int(address), int(pin), dbConnection)
-                        socketio.emit('redirect', {'device_name': device_name})
+                        emit('redirect',{'url': url_for('devicesList')})
                 except Exception, e:
                         global error
                         error = e

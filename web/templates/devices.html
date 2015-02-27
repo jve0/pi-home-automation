@@ -1,43 +1,183 @@
 {% extends 'index.html' %}
 {% block devices %}
 
-<body>
 
-<!-- table of devices --!>
-	<div class="table-responsive container">
-  		<div class="panel-heading">
-    			<h3 class="panel-title">List of connected devices</h3>
- 		 </div>
-  		
-  		<form name="device_request_details_form" class="form-horizontal" method="post" action="{{ url_for('device_details') }}">
-  		<!-- Table -->
-  		<div class="table-responsive">
-  			<table class="table table-hover table-striped">
-  				<tr style="font-weight: bold">
-  					<td>Name</td>
-  					<td>Address</td>
-  				</tr>
-  				
-				{% for device in devicesData %}
+
+
+<body>
+<button type="button" id="toast-btn" data-toggle=snackbar data-style="toast" data-content="Toast" data-timeout="100" hidden=True>clickme</button>
+
+<!-- table of devices -->
+	<center>
+    			<h3 class="text-muted">List of connected devices</h3>
+ 	</center>
+ 	
+ 	<label class="col-sm-4 control-label" id="lecture">---</label> 
+ 	
+	<div class="table-responsive container">	 
+  	</div> <!--end of table div-->
+ 
+<!-- start of form -->
+	<div>
+		<form id="reading_form" method="POST" action='#'>
+			
+	{% for device in DevicesTable %}
+	<div class="container panel panel-default">
+	   <div class="panel-heading">
+	   	<button type="submit" class="close" name="but" value="0 - {{ device['Address'] }} - delete"><span aria-hidden="true">&times;</span></button>
+	 	<h2 class="text-primary">{{ device['Name'] }}</h2>
+	 	<p class = "text-muted">      Address: {{ device['Address'] }}</p>
+
+	   </div>	
+	   
+	   
+  	 {% for table in TablesList %}
+  	  <div class="panel panel-default" style="padding:10px 10px 10px 10px">
+  	  <h4 class="text-info">{{ TablesNames[ loop.index0 ] }}</h4>
+  	  
+  	  
+  	    
+  	    {% set counter = loop.index0 %}
+  	    {% if 'Output' in TablesNames[ counter ] %}
+  	    
+  	    <div class="form-group table-responsive">
+			      <table class= "table table-hover table-stripped">
+			      <thead>
+			        <tr>
+			          <th>Name</th>
+			          <th>Pin</th>
+			        </tr>
+			       </thead>
+			{% for node in table %}
+			    
 				<tr>
-					<td><input type="submit" name="submit" value="{{ device.Name }}" class="btn btn-link"></td>
-					<td>{{ device.Address }}</td>
-				</tr>
-				{% endfor %}
-  			</table>
-  		</div>
-  		</form>
+				   
+    				   <td class="col-sm-1">
+      					<label class="control-label">{{ node.Name }}</label>
+    				   </td>
+    				   <td class="col-sm-1">
+      					<label class="control-label">{{ node.Pin }}</label>
+    				   </td>
+    				   
+    				   <td class="col-sm-2">	
+    					<div class = "btn-group">
+    							<button type="submit" name="but" class="btn btn-success btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} On">On</button>
+    							<button type="submit" name="but" class="btn btn-danger btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} Off">Off</button>
+    					</div>
+    				   </td>
+    					
+    				   <td>
+    				   </td>
+    					
+    				   <td class="col-sm-3">
+    					<div class="btn-group">
+    					  <button data-target="#" class="close btn-xs btn-fab dropdown-toggle mdi-navigation-more-vert" data-toggle="dropdown"></button>
+    					  <ul class="dropdown-menu">
+    					     <li><button type="submit" name="but" class="btn btn-xs mdi-image-edit" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} edit"> Edit</button></li>
+    					     <li><button type="submit" name="but" class="btn btn-xs mdi-content-clear" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} remove"> Remove</button></li
+			
+    					  </ul>
+    					</div>
+    				   </td>
+    				</tr>	
+    			    
+			{% endfor %}
+			 </table> <!-- end of table -->
+  			   </div><!--end of container -->
+			
+			
+		   {% elif 'Input' in TablesNames[ counter ] %}
+		    <div class="form-group table-responsive">
+			      <table class= "table table-hover table-stripped">
+			      <thead>
+			        <tr>
+			          <th>Name</th>
+			          <th>Pin</th>
+			        </tr>
+			       </thead>
+		        {% for node in table %}
+		           <tr>
+
+		             <td class="col-sm-1">
+		               <label class="control-label">{{ node.Name }}</label>
+		             </td>
+		             <td class="col-sm-1">
+      			         <label class="control-label">{{ node.Pin }}</label>
+      			     </td>
+      			      <td class="col-sm-3">
+		             	  <div class="btn-group">
+		               		<button type="submit" name="read" id="read-btn" class="btn btn-success btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} read">Read</button>
+		               
+		               		<button type="submit" name="cancel" id="cancel_read_btn" class="btn btn-danger btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} cancel">Cancel</button>
+		            	 </div>
+		              </td>
+		              <td class="col-sm-2">
+		             	<div >
+					<div id="log div">
+    				   		<label class="control-label" name="readings_log" id="sensor{{ node.Pin }}"></label>
+    					</div>
+    			     	</div>
+    			      </td>
+    			      <td class="col-sm-3">
+    					<div class="btn-group">
+    					  <a href="" data-target="#" class="btn btn-flat btn-xs btn-fab dropdown-toggle" data-toggle="dropdown"><span class="mdi-navigation-more-vert"></span></a>
+    					  <ul class="dropdown-menu">
+    					     <li><button type="submit" name="but" class="btn btn-xs mdi-image-edit" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} edit"> Edit</button></li>
+    					     <li><button type="submit" name="but" class="btn btn-xs mdi-content-clear" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} remove"> Remove</button></li
+			
+    					  </ul>
+    					</div>
+    				</td>
+    			     	
+			  </tr>
+		        {% endfor %}
+		        </table> <!-- end of table -->
+  			</div><!--end of container -->
+		     {% endif %}
+  	    
+  	    
+  	    
+  	    
+  	  </div> <!-- end of second panel div -->
+  	  {% endfor %} <!-- end table for-->
+  	  
+  	  <!-- Button that fires up the New Node Modal -->
+	  <div class="container">
+		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#new_node_modal" data-content="{{device['Address'] }}">New node</button>
+	  </div>
+
+  	  
+  	  </div> <!-- end of first panel -->
+  	{% endfor %} <!--end device for-->
+
+  	</form>
+	</div> <!-- end form div -->
+<!-- end of form -->
+
+
 
 <!-- end of table of devices -->
   	
+  	
+  	
+  	
+  	
+  	
+  	
+  	
+  	
   
-<!-- Button that fires up the Modal -->
+<!-- Button that fires up the New DeviceModal -->
 	<div>
 		<button type="button" class="btn btn-info btn-fab btn-raised mdi-content-add pull-right" data-toggle="modal" data-target="#new_item_modal"></button>
 	</div>
 </div> <!-- end of container -->
 	
-<!-- Modal -->
+	
+	
+	
+	
+<!-- New Device Modal -->
 	<div class="modal fade" id="new_item_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   		<div class="modal-dialog">
     			<div class="modal-content">
@@ -80,9 +220,134 @@
     			</div>
   		</div>
 	</div>
-<!-- end of modal -->
-		
+<!-- end of New Device modal -->
+
+
+
+
+<!-- New Node Modal -->
+	<div class="modal fade" id="new_node_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  		<div class="modal-dialog">
+    			<div class="modal-content">
+      				<div class="modal-header">
+        				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        				<h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      				</div>
+      				<div class="modal-body">
+      				
+
+
+<!-- Start the form -->
+
+				<form name="new_node_form" class="form-horizontal" method="post" action="{{ url_for('new_node') }}">
+  				  <div class="form-group">
+    				    <label for="inputName" class="col-sm-2 control-label">Name</label>
+    				    <div class="col-sm-10">
+      				      <input type="text" name="inputName" class="form-control" id="inputName" placeholder="Name of the device">
+    				    </div>
+  				  </div>
+  				  <div class="form-group">
+    				    <label for="inputPin" class="col-sm-2 control-label">Pin</label>
+    					<div class="col-sm-10">
+    					  <select name="inputPin" id="inputPin" class="form-control">
+    					    {% for i in range(0, 14) %}
+    					      <option>{{ i }}</option>
+    					    {% endfor %}
+    					  </select>
+    					</div>
+  				   </div>
+  				   
+  				   <div class="form-group">
+  				     <label for="signal" class="col-sm-2 control-label">Type of Signal</label>
+  				     <div class="col-sm-10">
+  				       <select name="signal" class="form-control">
+  				         <option>Digital Output</option>
+  				         <option>Digital Input</option>
+  				         <option>Analog Output</option>
+  				         <option>Analog Input</option>
+  				       </select>
+  				     </div>
+  				   </div>
+  				   
+  				   <div class="form-group">
+  				   
+  			
+  				     				    
+  				   <input type="checkbox" name="deviceAddress" id="deviceAddress" checked=True hidden=True>
+ 				   
+  				    <div class="form-group">
+    					<div class="col-sm-offset-2 col-sm-10">
+      					  <button type="submit" class="btn btn-success">Add</button>
+        				  <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+    					</div>
+  				     </div>
+				   </form>			
+<!--end of form-->	
+
+
+      				</div>
+    			</div>
+  		</div>
+	</div>
+<!-- end of New Node modal -->
 	
 </body>
+
+
+
+
+<!--JQuery to change sensor value -->
+<script type="text/javascript">
+	$(document).ready(function(){
+		//connect to the socket server
+		namespace ='/test';
+		var socket = socket = io.connect('http://' + document.domain + ':' + location.port+ namespace); 
+		
+		socket.on('connect', function(){
+			$("#lecture").text('Connected!');
+			$.snackbar({content: "Connected!", style:"toast"});
+		});
+			
+		
+		//receive details from server
+		socket.on('message', function(msg){
+			$("#lecture").text(msg.data);
+			$.snackbar({content: msg.data, style:"toast"});
+			
+		});
+		
+		
+		//receive details from server
+		socket.on('reading',function(msg){
+			//send it to the sensor pin
+			$("#sensor"+msg.pin).text(msg.data);
+		});
+		
+		socket.on('redirect', function(data){
+			window.location = data.url;
+
+		});
+		
+		$('button[type="submit"]').on('click', function(){
+			$('form#reading_form').data('button', this.value);
+		});
+		
+		
+		$('form#reading_form').submit(function(event) {
+			value = $(this).data('button')
+                	$("#lecture").text(value);
+                	socket.emit('start reading', {data:  value});
+                	return false;
+            	});
+            	
+            	$('#new_node_modal').on('show.bs.modal', function(event){
+            		var button = $(event.relatedTarget);
+            		var recipient = button.data('content');
+            		var modal = $(this);
+            		$('#deviceAddress').val(recipient)
+            	});
+		
+	}); //end of document.ready
 	
+</script>
 {% endblock %}

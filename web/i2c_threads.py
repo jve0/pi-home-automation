@@ -81,8 +81,8 @@ class CommunicationThread(Thread, i2cCommunication):
     
         
     def sendSocketMessage(self, data):
-        (self.socketio).emit('reading',
-                  {'data': data, 'pin': self.pin}, namespace='/test')
+        (self.socketio).emit('message',
+                  {'data': data}, namespace='/test')
     
     def run(self):
         while not (self.exitFlag).is_set():
@@ -117,9 +117,7 @@ class CommunicationThread(Thread, i2cCommunication):
                 self.sendSocketMessage(data)
                 self.setExitFlag()
                 break
-
         
-        #self.sendSocketMessage('-')
         print 'exited'
 
 

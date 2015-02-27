@@ -48,7 +48,7 @@ def dbInsert(table, connection, args):
     '''e.g. args = [{'Name': 'jose', 'Address':0},{'Name':'pepe', 'Address': 1}]'''
 
 def dbSelectTable(table, connection):
-    return connection.execute(select([table]))
+    return connection.execute(select([table])).fetchall()
     '''this returns a dict, thus the best way to get the rows is by for loop'''
 
 def dbSelectRowByAddress(table, address, connection):
@@ -65,31 +65,19 @@ def dbUpdate(table, connection, args):
     u.execute(args)
 
 def dbDelete(table, address, pin, connection):
+    print 'llega a dbDelete'
     connection.execute(table.delete().where(and_(table.c.Address == address,
                                                  table.c.Pin == pin)))
+
+def dbDeleteDevice(tablesDict, address, connection):
+    for table in tablesDict:
+        connection.execute(tablesDict[table].delete().where(tablesDict[table].c.Address == address))
+    else:
+        return True
+    return False
 
 def dbDrop(table, engine, connection):
     connection.close()
     table.drop(engine)
     conn = engine.connect()
     
-
-##s = dbInit()
-##engine = s[0]
-##metadata = s[1]
-##conn = s[2]
-##
-##table = dbCreateTables(metadata, engine, 2)
-####ins = [{'Pin': 10, 'Address':12, 'Name': 'test'}]
-####dbInsert(table, conn, ins)
-##
-##dbDelete(table, 12, 10, conn)
-##rs = dbSelectTable(table, conn)
-##
-##for row in rs:
-##    print str(row.Address) + " + " + str(row.Pin)
-##
-####ad = dbSelectRowByAddress(table, 12, conn)
-####print ad
-##
-###dbDrop(table, engine, conn)

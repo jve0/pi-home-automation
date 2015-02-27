@@ -137,38 +137,6 @@ def new_node():
         return redirect(url_for('devicesList'))
 
 
-#method for the details of the devices
-@app.route('/devices/details', methods=['POST'])
-def device_details():
-        device_name = request.form['submit']
-        return redirect(url_for('particular_device_details', device_name=device_name))
-
-#method for the page of each device
-@app.route('/<device_name>')
-def particular_device_details(device_name):
-        '''get the address of the device, looking for the name received in the devices table'''
-        device_address = dbSelectAddressByName(dbDevicesTable, device_name, dbInit()[2])
-        tables={}
-        '''with the address found, look in every table and get the data'''
-        for tb in dbTablesDict:
-                if tb!= 'Devices':
-                        tables[tb]= dbSelectRowByAddress(dbTablesDict[tb], device_address, dbConnection)
-
-        '''in case there's an error'''
-        global error
-        current_error = error
-        error = ""
-             
-        '''render'''
-        #return tables
-        return render_template('details.html',
-                               device_name=device_name,
-                               device_address=device_address,
-                               tables=tables,
-                               error=current_error)
-
-
-
 ####
 #### methods for the socket
 ####        
@@ -186,7 +154,7 @@ def socket_start_reading(msg):
         address = sub_inputs[2]
         pin = sub_inputs[3]
         instr = sub_inputs[4]
-        
+
         if instr == 'delete':
                 dbConnection = dbInit()[2]
                 if dbDeleteDevice(dbTablesDict, address, dbConnection):
@@ -250,6 +218,7 @@ def socket_start_reading(msg):
                 comThreads[address + pin].start()
         else:
                 emit('message', {'data': instr})
+
 
 #run the server
 if __name__ == "__main__":

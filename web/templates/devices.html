@@ -2,17 +2,14 @@
 {% block devices %}
 
 
-
-
 <body>
-<button type="button" id="toast-btn" data-toggle=snackbar data-style="toast" data-content="Toast" data-timeout="100" hidden=True>clickme</button>
 
 <!-- table of devices -->
 	<center>
     			<h3 class="text-muted">List of connected devices</h3>
  	</center>
  	
- 	<label class="col-sm-4 control-label" id="lecture">---</label> 
+	<!--<label class="col-sm-4 control-label" id="lecture">---</label> -->
  	
 	<div class="table-responsive container">	 
   	</div> <!--end of table div-->
@@ -24,7 +21,7 @@
 	{% for device in DevicesTable %}
 	<div class="container panel panel-default">
 	   <div class="panel-heading">
-	   	<button type="submit" class="close" name="but" value="0 - {{ device['Address'] }} - delete"><span aria-hidden="true">&times;</span></button>
+	   	<button type="submit" class="close" name="button" value="0 - {{ device['Address'] }} - delete"><span aria-hidden="true">&times;</span></button>
 	 	<h2 class="text-primary">{{ device['Name'] }}</h2>
 	 	<p class = "text-muted">      Address: {{ device['Address'] }}</p>
 
@@ -40,7 +37,7 @@
   	    {% set counter = loop.index0 %}
   	    {% if 'Output' in TablesNames[ counter ] %}
   	    
-  	    <div class="form-group table-responsive">
+  	    <div class=" table-responsive">
 			      <table class= "table table-hover table-stripped">
 			      <thead>
 			        <tr>
@@ -59,25 +56,22 @@
       					<label class="control-label">{{ node.Pin }}</label>
     				   </td>
     				   
-    				   <td class="col-sm-2">	
-    					<div class = "btn-group">
-    							<button type="submit" name="but" class="btn btn-success btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} On">On</button>
-    							<button type="submit" name="but" class="btn btn-danger btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} Off">Off</button>
-    					</div>
+    				   <td class="col-sm-2">
+    				   	<div class="togglebutton">
+    				   		<label>
+    				   			<input type="checkbox" id="toggle_on_off" name="toggle_on_off" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }}">
+    				   		</label>
+    				   	</div>
     				   </td>
     					
     				   <td>
     				   </td>
     					
-    				   <td class="col-sm-3">
-    					<div class="btn-group">
-    					  <button data-target="#" class="close btn-xs btn-fab dropdown-toggle mdi-navigation-more-vert" data-toggle="dropdown"></button>
-    					  <ul class="dropdown-menu">
-    					     <li><button type="submit" name="but" class="btn btn-xs mdi-image-edit" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} edit"> Edit</button></li>
-    					     <li><button type="submit" name="but" class="btn btn-xs mdi-content-clear" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} remove"> Remove</button></li
-			
-    					  </ul>
-    					</div>
+    				   <td class="col-sm-2">
+    				   	
+    					     <button type="submit" name="but" class="close btn-xs mdi-content-clear" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} remove"> </button>
+    					     <button type="submit" name="but" class="close mdi-image-edit" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} edit"></button>
+    					     
     				   </td>
     				</tr>	
     			    
@@ -105,11 +99,11 @@
       			         <label class="control-label">{{ node.Pin }}</label>
       			     </td>
       			      <td class="col-sm-3">
-		             	  <div class="btn-group">
-		               		<button type="submit" name="read" id="read-btn" class="btn btn-success btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} read">Read</button>
-		               
-		               		<button type="submit" name="cancel" id="cancel_read_btn" class="btn btn-danger btn-xs" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} cancel">Cancel</button>
-		            	 </div>
+      			      	 <div class="togglebutton">
+    				   		<label>
+    				   			<input type="checkbox" id="toggle_read_cancel" name="toggle_read_cancel" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }}">
+    				   		</label>
+    				  </div>
 		              </td>
 		              <td class="col-sm-2">
 		             	<div >
@@ -119,14 +113,10 @@
     			     	</div>
     			      </td>
     			      <td class="col-sm-3">
-    					<div class="btn-group">
-    					  <a href="" data-target="#" class="btn btn-flat btn-xs btn-fab dropdown-toggle" data-toggle="dropdown"><span class="mdi-navigation-more-vert"></span></a>
-    					  <ul class="dropdown-menu">
-    					     <li><button type="submit" name="but" class="btn btn-xs mdi-image-edit" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} edit"> Edit</button></li>
-    					     <li><button type="submit" name="but" class="btn btn-xs mdi-content-clear" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} remove"> Remove</button></li
-			
-    					  </ul>
-    					</div>
+    			      		<button type="submit" name="but" class="close btn-fab mdi-content-clear" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} remove"></button>
+    					<button type="submit" name="but" class="close btn-fab mdi-image-edit" value="{{ counter }} {{ device['Name'] }} {{ device['Address'] }} {{ node.Pin }} edit"></button>
+    					  
+    					
     				</td>
     			     	
 			  </tr>
@@ -301,7 +291,7 @@
 	$(document).ready(function(){
 		//connect to the socket server
 		namespace ='/test';
-		var socket = socket = io.connect('http://' + document.domain + ':' + location.port+ namespace); 
+		var socket = socket = io.connect('http://' + document.domain + ':' + location.port+ namespace);
 		
 		socket.on('connect', function(){
 			$("#lecture").text('Connected!');
@@ -342,12 +332,31 @@
             	
             	$('#new_node_modal').on('show.bs.modal', function(event){
             		var button = $(event.relatedTarget);
-            		var recipient = button.data('content');
+            		var address = button.data('content');
             		var modal = $(this);
-            		$('#deviceAddress').val(recipient)
+            		$('#deviceAddress').val(address)
             	});
-		
+            	
+            	
+            	
+            	$('input[name="toggle_on_off"]').click(function(){
+            		var msg = $(this).val();
+            		var state = $(this).prop('checked');
+            		if (state){ socket.emit('start reading', {data:  msg + " On"});}
+            		else {socket.emit('start reading', {data:  msg + " Off"});}
+            	});
+            	
+            	$('input[name="toggle_read_cancel"]').click(function(){
+            		var msg = $(this).val();
+            		var state = $(this).prop('checked');
+            		if (state){ socket.emit('start reading', {data:  msg + " read"});}
+            		else {socket.emit('start reading', {data:  msg + " cancel"});}
+            	});
+
+	
 	}); //end of document.ready
+	
+	
 	
 </script>
 {% endblock %}

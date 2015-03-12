@@ -11,6 +11,7 @@ from flask.ext.socketio import SocketIO, emit, disconnect
 ##
 
 class i2cCommunication():
+	## initialisation of the class
     def __init__(self, bus):
         self.bus = bus
         self.cmd = 0
@@ -21,7 +22,7 @@ class i2cCommunication():
         self.timeSleep = 0.2
     
     def digitalWrite(self, pin, address, val):
-        (self.bus).write_i2c_block_data(address, self.cmd, [pin, self.WRITE, self.DIGITAL, val])
+        (self.bus).write_i2c_block_data(address, self.cmd, [pin, self.WRITE, self.DIGITAL, val]) #get the bus object and write a block of data with the information received
     
     def digitalRead(self, pin, address):
         (self.bus).write_i2c_block_data(address, self.cmd, [pin, self.READ, self.DIGITAL, 0])
@@ -48,7 +49,9 @@ class i2cCommunication():
 ##
 ##
 
-class CommunicationThread(Thread, i2cCommunication):
+class CommunicationThread(Thread, i2cCommunication): #Note the inheritance from the class i2cCommunication
+
+	## initialise all the values that are going to be needed
     def __init__(self, name, address, pin, A_D, R_W, val, bus, sleep, socketio):
         Thread.__init__(self)
         self.name = name
@@ -84,8 +87,9 @@ class CommunicationThread(Thread, i2cCommunication):
         (self.socketio).emit('message',
                   {'data': data}, namespace='/test')
     
+    # method that will run when the thread is created
     def run(self):
-        while not (self.exitFlag).is_set():
+        while not (self.exitFlag).is_set(): # keep going until the exitFlag is set
             try:
                 if self.R_W == 0:   #Read
                     if self.A_D == 0: #Analog Read
@@ -93,7 +97,7 @@ class CommunicationThread(Thread, i2cCommunication):
                     elif self.A_D == 1: #Digital Read
                         data = i2cCommunication.digitalRead(self, self.pin, self.address)
                     
-                    self.sendSocketMessage(data)
+                    self.sendSocketMessage(data) #send the data gathered through the socket to the main thread
                     time.sleep(self.sleep)
                     
                 elif self.R_W == 1: #Write
@@ -112,7 +116,7 @@ class CommunicationThread(Thread, i2cCommunication):
                     self.setExitFlag()
                     break
                         
-            except Exception, e:
+            except Exception, e: ##when an exception is captured send the type of error as a socket message
                 data = str(e)
                 self.sendSocketMessage(data)
                 self.setExitFlag()
@@ -121,6 +125,9 @@ class CommunicationThread(Thread, i2cCommunication):
         print 'exited'
 
 
+##
+## Method to be called whenever we want to create a new communication thread
+##
 def create_CommunicationThread(name, address, pin, A_D, R_W, val, bus, sleep, socketio):
     return CommunicationThread(name, address, pin, A_D, R_W, val, bus, sleep, socketio)
 

@@ -23,12 +23,6 @@ socketio = SocketIO(app)
 #dict to store the different threads created
 comThreads = {}
 
-#data to send to the html
-templateData = {
-		'title': 'HELLO!',
-		'time': '',
-                'chat': []
-	}
 
 #i2c bus init
 bus = smbus.SMBus(1)
@@ -62,24 +56,13 @@ error = ""
 #code to execute when entered '/'
 @app.route("/")
 def hello():
-	now = datetime.datetime.now()
-	timeString = now.strftime("%Y-%m-%d %H:%M")
-	templateData['time'] = timeString
-	templateData['chat'] = []
+	return render_template('main.html', templateData=templateData) #Render the template
 
-	'''render the template'''
-	return render_template('main.html', templateData=templateData)
-
-
-#code to execute when POST a form
-@app.route('/')
-def my_form_post():
-        return render_template('main.html')
 
 #method for the devices tab
 @app.route('/devices')
 def devicesList():    
-        #gets a dict with all the devices in the i2c_devices table
+        #creates a dict with all the devices in the i2c_devices table
         dbConnection = dbInit()[2]
         devicesTable = dbSelectTable(dbDevicesTable, dbConnection)
         DITable = dbSelectTable(dbDITable, dbConnection)
@@ -88,41 +71,46 @@ def devicesList():
         AOTable = dbSelectTable(dbAOTable, dbConnection)
         tablesList = [DOTable, DITable, AITable, AOTable]
         
-                
+        # it passes it to the template before rendering
         return render_template('devices.html', DevicesTable=devicesTable,
                                TablesList=tablesList, TablesNames = tablesNames,
                                counter = 0)
 
-#method for the new devices form
+#method for the new devices form. What happens to create a new device
 @app.route('/devices/new_device', methods=['POST'])
 def new_device():
+        # gets the information from the form
         name = request.form['inputName']
         address = request.form['inputAddress']
         new_device_args = [{'Name': name, 'Address': address}]
 
+        # gets all the entries from the Devices table in the database
         dbConnection = dbInit()[2]
         values = dbSelectTable(dbDevicesTable, dbConnection)
 
+        # Checks that the name is not already used
         for device in values:
                 if device.Name == name:
                         break
         else:
-                '''create new item in i2c_devices table in database'''
+                # in case it really doesn't exist yet, create new item in i2c_devices table in database
                 dbInsert(dbDevicesTable, dbConnection, new_device_args)
-        return redirect('/devices')
+        return redirect('/devices') # go back to the web page
 
-#method for a new node inside a device
+# method for creating a new node inside a device
 @app.route('/devices/new_node', methods=['POST'])
 def new_node():
+        # gets the information from the form
         input_name = request.form['inputName']
         input_pin = request.form['inputPin']
         signal = request.form['signal']
-        
         device_address = request.form['deviceAddress']
 
+        # Arrange the data in the way that it want to be passed to the database (to the dbInsert method)
         print "name: "+input_name+", address:"+device_address+"."
         args=[{'Name': input_name, 'Address': int(device_address), 'Pin': int(input_pin)}]
 
+        # Depending on the kind of signal chosen, select the appropriate db table
         if signal == 'Digital Output':
                 dbInsert(dbDOTable, dbConnection, args)
         elif signal == 'Digital Input':
@@ -146,8 +134,10 @@ def new_node():
 def test_connect():
         pass
 
+# Start reading: an option from a node is selected (delete, on, off, read, cancel, remove)
 @socketio.on('start reading', namespace='/test')
 def socket_start_reading(msg):
+        # gets the relevant information from the form
         sub_inputs = msg['data'].split()
         table = tablesNamesDict[tablesNames[int(sub_inputs[0])]]
         device_name = sub_inputs[1]
@@ -155,6 +145,8 @@ def socket_start_reading(msg):
         pin = sub_inputs[3]
         instr = sub_inputs[4]
 
+        # depending on the action that the user want to take place 
+        # DELETE
         if instr == 'delete':
                 dbConnection = dbInit()[2]
                 if dbDeleteDevice(dbTablesDict, address, dbConnection):
@@ -162,20 +154,23 @@ def socket_start_reading(msg):
                         emit('redirect',{'url': url_for('devicesList')})
                 else:
                         emit('message', {'data': 'fail deleting'})
+
+        # READ
         elif instr == 'read':
-                for key in comThreads:
+                for key in comThreads:  # checks that the thread is not running already
                         if key == (address + pin):
                                 emit('reading',
                                      {'data': 'thread already started',
                                       'pin': pin}, namespace='/test')
                                 break
-                else:
+                else:   # if it is not created, then creates it 
                         myCom = create_CommunicationThread('thread', int(address), int(pin),
                                                     0, 0, 0, bus, 2, socketio)
                         
                         comThreads[address + pin] = myCom
                         comThreads[address + pin].start()
-                
+
+        # CANCEL
         elif instr == 'cancel':
                 if (address + pin) in comThreads:
                         if comThreads[address + pin].getExitFlag():
@@ -194,6 +189,7 @@ def socket_start_reading(msg):
                 emit('reading',{'data': '',
                                 'pin': pin}, namespace='/test')
 
+        # REMOVE
         elif instr == 'remove':
                 try:
                         dbConnection = dbInit()[2]
@@ -203,19 +199,23 @@ def socket_start_reading(msg):
                         global error
                         error = e
                 
-        
+        # ON
         elif instr == 'On':
                 myCom = create_CommunicationThread('thread', int(address), int(pin),
                                                    1, 1, 1, bus, 0, socketio)
                         
                 comThreads[address + pin] = myCom
                 comThreads[address + pin].start()
+
+        # OFF
         elif instr == 'Off':
                 myCom = create_CommunicationThread('thread', int(address), int(pin),
                                                    1, 1, 0, bus, 0, socketio)
                         
                 comThreads[address + pin] = myCom
                 comThreads[address + pin].start()
+
+        # OTHER
         else:
                 emit('message', {'data': instr})
 

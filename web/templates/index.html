@@ -10,8 +10,7 @@
 	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 	
-	
-    	<!-- Javascript code required for json -->
+	<!-- Javascript code required for json -->
 	<script type="text/javascript">
  		var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 	</script>
@@ -47,15 +46,13 @@
     				</div><!-- /.navbar-collapse -->
   			</div><!-- /.container-fluid -->
 		</nav>
-<!-- end of navigation bar -->	
-
 	</body>
+<!-- end of navigation bar -->
 
 
 
 
-
-<!-- alerts -->
+<!-- alerts 
 	<body>
 		{% if error != "" and error is defined %}
 		<div class="container">
@@ -70,7 +67,7 @@
 		{% endif %}
 		
 	</body>
-<!-- End of alerts -->
+ End of alerts -->
 
 
 	<body>
@@ -87,22 +84,19 @@
 	
 	
 	<script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
-        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-
-        <script src="static/js/ripples.min.js"></script>
-        <script src="static/js/material.min.js"></script>
+   	<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script src="static/js/ripples.min.js"></script>
+    <script src="static/js/material.min.js"></script>
         
-        <!-- snackbarJS -->
+ 	<!-- snackbarJS -->
 	<script src="static/js/snackbar.min.js"></script>
-        
-        <script>
-            $(document).ready(function() {
-                $.material.init();
-            });
-        </script>
+    <script>
+       	$(document).ready(function() {
+        	$.material.init();
+       	});
+    </script>
     	
-	
-	<!-- Javascript for alerts management -->
+	<!-- Javascript for alerts management 
 	<script type="text/javascript" charset="utf-8">
         	$(function(){
         		$('#alert-success').click(function(e){
@@ -110,6 +104,7 @@
         			$('#successAlert').slideDown();
         		});
         	});
-        </script>
+    </script>
+    end of alerts management -->
         	
 </html>

@@ -1,3 +1,5 @@
+
+#### IMPORT THE LIBRARIES AND MODULES
 from gevent import monkey
 monkey.patch_all()
 
@@ -12,7 +14,9 @@ from i2c_threads import create_CommunicationThread
 
 from flask import Flask, render_template, session, request
 from flask.ext.socketio import SocketIO, emit, disconnect
+####
 
+#### INITIALISATIONS
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 app.debug = True
@@ -51,7 +55,7 @@ tablesNamesDict ={'Digital Output':'DO', 'Digital Input':'DI',
                        'Analog Input':'A)', 'Analog Ouptut':'AO'}
 
 error = ""
-
+####
 
 #code to execute when entered '/'
 @app.route("/")

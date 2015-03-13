@@ -3,7 +3,7 @@
 from gevent import monkey
 monkey.patch_all()
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, request
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from server_db import *
 import datetime
 

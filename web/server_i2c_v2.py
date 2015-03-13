@@ -3,7 +3,7 @@
 from gevent import monkey
 monkey.patch_all()
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, request
 from server_db import *
 import datetime
 
@@ -12,7 +12,6 @@ import time
 
 from i2c_threads import create_CommunicationThread
 
-from flask import Flask, render_template, session, request
 from flask.ext.socketio import SocketIO, emit, disconnect
 ####
 

@@ -9,4 +9,4 @@ home automation system with a Raspberry Pi and an Arduino
 ![blabla](Screenshots/list%20page%202.jpg?raw=True "Title")
 
 ### Mobile devices friendly
-![blabla](Screenshots/Home%20page%20phone.png?raw=True "Title")
+![blabla](Screenshots/Home%20page%20phone.png?raw=True =50x "Title")
